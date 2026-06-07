@@ -316,6 +316,57 @@ textarea {
   margin-top: 18px;
 }
 
+.image-sequence {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0 16px;
+}
+
+.sequence-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.sequence-image {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  background: var(--soft);
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.sequence-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.sequence-card div:last-child {
+  padding: 10px;
+}
+
+.sequence-card strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.sequence-card p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.sequence-card.empty {
+  border-style: dashed;
+}
+
 .inventory h3 {
   margin-bottom: 16px;
 }
@@ -449,6 +500,10 @@ textarea {
 
   .quad {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .image-sequence {
+    grid-template-columns: 1fr;
   }
 
   .details {

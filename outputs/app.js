@@ -18,6 +18,7 @@ const els = {
   closeModal: document.querySelector("#closeModal"),
   resetDemo: document.querySelector("#resetDemo"),
   newProduct: document.querySelector("#newProduct"),
+  imageSequence: document.querySelector("#imageSequence"),
 };
 
 const fields = {
@@ -248,6 +249,29 @@ function renderSimilarSelect(selectedId = "", selected = []) {
     .join("");
 }
 
+function renderImageSequence(images = []) {
+  const labels = ["Foto principal", "Foto 2", "Foto 3"];
+  const descriptions = [
+    "Primeira imagem exibida na galeria e no topo do produto.",
+    "Segunda imagem exibida no pop-up do produto.",
+    "Terceira imagem exibida no pop-up do produto.",
+  ];
+
+  els.imageSequence.innerHTML = labels.map((label, index) => {
+    const image = images[index];
+    return `
+      <article class="sequence-card ${image ? "" : "empty"}">
+        <div class="sequence-image">
+          ${image ? `<img src="${image}" alt="${label}">` : `<span>Sem foto</span>`}
+        </div>
+        <div>
+          <strong>${label}</strong>
+          <p>${descriptions[index]}</p>
+        </div>
+      </article>`;
+  }).join("");
+}
+
 function renderAll() {
   renderFilters();
   renderGallery();
@@ -270,6 +294,8 @@ function editProduct(id) {
   fields.stock.value = product.stock;
   fields.price.value = product.price;
   fields.description.value = product.description;
+  fields.images.value = "";
+  renderImageSequence(product.images || []);
   renderSimilarSelect(product.id, product.similarIds || []);
   fields.title.focus();
 }
@@ -277,6 +303,7 @@ function editProduct(id) {
 function clearForm() {
   els.form.reset();
   fields.id.value = "";
+  renderImageSequence();
   renderSimilarSelect();
 }
 
@@ -372,6 +399,11 @@ els.clearFilters.addEventListener("click", () => {
 els.form.addEventListener("submit", saveForm);
 els.newProduct.addEventListener("click", clearForm);
 els.closeModal.addEventListener("click", () => els.modal.close());
+fields.images.addEventListener("change", async () => {
+  const selectedImages = [...fields.images.files].slice(0, 3);
+  const uploaded = await Promise.all(selectedImages.map(fileToDataUrl));
+  if (uploaded.length) renderImageSequence(uploaded);
+});
 els.resetDemo.addEventListener("click", () => {
   localStorage.removeItem(storageKey);
   products = demoProducts();
@@ -384,3 +416,4 @@ els.resetDemo.addEventListener("click", () => {
 });
 
 renderAll();
+renderImageSequence();
