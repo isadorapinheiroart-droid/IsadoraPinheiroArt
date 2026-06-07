@@ -485,7 +485,7 @@ function openProduct(id) {
     <div class="photo-viewer">
       <div class="main-photo-wrap">
         <img id="mainModalImage" src="${product.images[0]}" alt="${product.title}">
-        ${Number(product.stock) > 0 ? `<button class="buy-float" id="buyFromPhoto" type="button" hidden>Comprar</button>` : ""}
+        ${Number(product.stock) > 0 ? `<button class="buy-float" id="buyFromPhoto" type="button">Comprar</button>` : ""}
       </div>
       <div class="thumbs">
         ${product.images.slice(0, 3).map((image, index) => `<button type="button" data-image="${index}"><img src="${image}" alt="Foto ${index + 1} de ${product.title}"></button>`).join("")}
@@ -496,7 +496,7 @@ function openProduct(id) {
       <h2>${product.title}</h2>
       <p class="meta">${product.material} · ${product.paint} · cor ${product.color}</p>
       ${price}
-      ${Number(product.stock) > 0 ? `<button class="primary-button detail-buy" type="button" data-add-cart="${product.id}">Adicionar ao carrinho</button>` : ""}
+      ${Number(product.stock) > 0 ? `<div class="buy-actions"><button class="primary-button detail-buy" type="button" data-add-cart="${product.id}">Adicionar ao carrinho</button><button class="checkout-now" type="button" data-buy-now="${product.id}">Comprar agora</button></div>` : ""}
       <p><strong>Dimensões:</strong> ${product.height} cm altura, ${product.width} cm largura, ${product.depth} cm espessura.</p>
       <p>${product.description}</p>
       <h3>Quadros similares</h3>
@@ -527,6 +527,12 @@ function openProduct(id) {
   }
   els.modalBody.querySelectorAll("[data-add-cart]").forEach((button) => {
     button.addEventListener("click", () => addToCart(button.dataset.addCart));
+  });
+  els.modalBody.querySelectorAll("[data-buy-now]").forEach((button) => {
+    button.addEventListener("click", () => {
+      addToCart(button.dataset.buyNow);
+      startCheckout();
+    });
   });
   els.modalBody.querySelectorAll("[data-open-similar]").forEach((button) => {
     button.addEventListener("click", () => openProduct(button.dataset.openSimilar));
