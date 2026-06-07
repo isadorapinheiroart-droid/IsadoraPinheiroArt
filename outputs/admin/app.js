@@ -88,11 +88,18 @@ function currentUser() {
   return users.find((user) => user.id === id);
 }
 
+function requireAuth() {
+  const user = currentUser();
+  if (!user) setAuthenticated(null);
+  return Boolean(user);
+}
+
 function setAuthenticated(user) {
   if (user) {
     localStorage.setItem(sessionKey, user.id);
     els.loginScreen.hidden = true;
     els.adminApp.hidden = false;
+    document.body.classList.remove("locked");
     els.sessionUser.textContent = `${user.name} · ${user.role}`;
     els.checkoutEndpointInput.value = localStorage.getItem(checkoutEndpointKey) || "";
     renderAll();
@@ -100,6 +107,7 @@ function setAuthenticated(user) {
     localStorage.removeItem(sessionKey);
     els.loginScreen.hidden = false;
     els.adminApp.hidden = true;
+    document.body.classList.add("locked");
   }
 }
 
@@ -129,6 +137,7 @@ function renderSimilarSelect(currentId = "", selected = []) {
 }
 
 function renderProducts() {
+  if (!requireAuth()) return;
   els.productCount.textContent = `${products.length} obras`;
   els.productList.innerHTML = products.map((product) => `
     <div class="row">
@@ -160,6 +169,7 @@ function renderProducts() {
 }
 
 function editProduct(id) {
+  if (!requireAuth()) return;
   const product = products.find((item) => item.id === id);
   if (!product) return;
   productFields.id.value = product.id;
@@ -198,6 +208,7 @@ function fileToDataUrl(file) {
 
 async function saveProduct(event) {
   event.preventDefault();
+  if (!requireAuth()) return;
   const id = productFields.id.value || crypto.randomUUID();
   const existing = products.find((product) => product.id === id);
   const selectedImages = [...productFields.images.files].slice(0, 3);
@@ -226,6 +237,7 @@ async function saveProduct(event) {
 }
 
 function renderUsers() {
+  if (!requireAuth()) return;
   els.userCount.textContent = `${users.length} usuários`;
   els.userList.innerHTML = users.map((user) => `
     <div class="row">
@@ -255,6 +267,7 @@ function renderUsers() {
 }
 
 function editUser(id) {
+  if (!requireAuth()) return;
   const user = users.find((item) => item.id === id);
   if (!user) return;
   userFields.editing.value = user.id;
@@ -273,6 +286,7 @@ function clearUserForm() {
 
 function saveUser(event) {
   event.preventDefault();
+  if (!requireAuth()) return;
   const id = userFields.editing.value || crypto.randomUUID();
   const duplicate = users.find((user) => user.login === userFields.login.value.trim() && user.id !== id);
   if (duplicate) {
@@ -293,12 +307,14 @@ function saveUser(event) {
 }
 
 function switchView(view) {
+  if (!requireAuth()) return;
   els.tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.view === view));
   els.views.forEach((panel) => panel.classList.toggle("active", panel.id === `${view}View`));
   els.viewTitle.textContent = view === "products" ? "Obras e estoque" : view === "users" ? "Usuários" : "Pagamentos";
 }
 
 function renderAll() {
+  if (!requireAuth()) return;
   renderProducts();
   renderUsers();
   renderPhotoSequence();

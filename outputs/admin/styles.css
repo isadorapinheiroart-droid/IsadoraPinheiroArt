@@ -70,13 +70,21 @@ p {
 }
 
 .login-screen {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
   padding: 24px;
   background:
     linear-gradient(120deg, rgba(31, 122, 107, 0.12), rgba(182, 75, 53, 0.08)),
     var(--paper);
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+}
+
+.login-screen[hidden],
+.app[hidden] {
+  display: none !important;
 }
 
 .login-card {
@@ -130,6 +138,10 @@ textarea {
   min-height: 100vh;
   display: grid;
   grid-template-columns: 280px 1fr;
+}
+
+body.locked {
+  overflow: hidden;
 }
 
 .sidebar {
