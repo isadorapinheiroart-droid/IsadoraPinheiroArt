@@ -55,6 +55,11 @@ const els = {
   contactTextInput: document.querySelector("#contactTextInput"),
   worksScaleInput: document.querySelector("#worksScaleInput"),
   saveSiteSettings: document.querySelector("#saveSiteSettings"),
+  resetNavSettings: document.querySelector("#resetNavSettings"),
+  resetServicesSettings: document.querySelector("#resetServicesSettings"),
+  resetProcessSettings: document.querySelector("#resetProcessSettings"),
+  resetContactSettings: document.querySelector("#resetContactSettings"),
+  resetWorksSettings: document.querySelector("#resetWorksSettings"),
   resetSiteSettings: document.querySelector("#resetSiteSettings"),
 };
 
@@ -244,6 +249,21 @@ function readSiteSettingsForm() {
       scale: Number(els.worksScaleInput.value),
     },
   });
+}
+
+function applyAndSaveSiteSettings(settings) {
+  saveSiteSettings(settings);
+  populateSiteSettings(settings);
+}
+
+function restoreSitePart(part) {
+  const settings = readSiteSettingsForm();
+  if (part === "nav") settings.nav = { ...defaultSiteSettings.nav };
+  if (part === "services") settings.sections.services = { ...defaultSiteSettings.sections.services };
+  if (part === "process") settings.sections.process = { ...defaultSiteSettings.sections.process };
+  if (part === "contact") settings.sections.contact = { ...defaultSiteSettings.sections.contact };
+  if (part === "works") settings.works = { ...defaultSiteSettings.works };
+  applyAndSaveSiteSettings(settings);
 }
 
 function currentUser() {
@@ -582,9 +602,13 @@ els.resetHeroSettings.addEventListener("click", () => {
 });
 els.saveSiteSettings.addEventListener("click", () => {
   const settings = readSiteSettingsForm();
-  saveSiteSettings(settings);
-  populateSiteSettings(settings);
+  applyAndSaveSiteSettings(settings);
 });
+els.resetNavSettings.addEventListener("click", () => restoreSitePart("nav"));
+els.resetServicesSettings.addEventListener("click", () => restoreSitePart("services"));
+els.resetProcessSettings.addEventListener("click", () => restoreSitePart("process"));
+els.resetContactSettings.addEventListener("click", () => restoreSitePart("contact"));
+els.resetWorksSettings.addEventListener("click", () => restoreSitePart("works"));
 els.resetSiteSettings.addEventListener("click", () => {
   localStorage.removeItem(siteSettingsKey);
   populateSiteSettings(loadSiteSettings());

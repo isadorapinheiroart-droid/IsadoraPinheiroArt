@@ -339,6 +339,10 @@ body.locked {
   padding-top: 0;
 }
 
+.content-editor > button {
+  margin-top: 12px;
+}
+
 .hero-preview {
   width: 100%;
   aspect-ratio: 16 / 9;

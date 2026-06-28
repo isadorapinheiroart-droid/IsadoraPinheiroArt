@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Admin | Atelier Autoral</title>
-    <link rel="stylesheet" href="./styles.css?v=5" />
+    <link rel="stylesheet" href="./styles.css?v=6" />
   </head>
   <body>
     <main>
@@ -238,6 +238,9 @@
                 Escala dos botões
                 <input id="navScaleInput" type="range" min="60" max="180" value="100" />
               </label>
+              <div class="actions">
+                <button id="resetNavSettings" type="button">Restaurar padrão dos botões</button>
+              </div>
             </div>
 
             <div class="panel settings">
@@ -257,6 +260,7 @@
                   Texto
                   <textarea id="servicesTextInput" rows="4"></textarea>
                 </label>
+                <button id="resetServicesSettings" type="button">Restaurar padrão de serviços</button>
               </div>
               <div class="content-editor">
                 <h4>Processo</h4>
@@ -272,6 +276,7 @@
                   Texto
                   <textarea id="processTextInput" rows="4"></textarea>
                 </label>
+                <button id="resetProcessSettings" type="button">Restaurar padrão de processo</button>
               </div>
               <div class="content-editor">
                 <h4>Contato</h4>
@@ -287,6 +292,7 @@
                   Texto
                   <textarea id="contactTextInput" rows="4"></textarea>
                 </label>
+                <button id="resetContactSettings" type="button">Restaurar padrão de contato</button>
               </div>
             </div>
 
@@ -299,7 +305,8 @@
               </label>
               <div class="actions">
                 <button class="primary" id="saveSiteSettings" type="button">Salvar ajustes do site</button>
-                <button id="resetSiteSettings" type="button">Restaurar ajustes</button>
+                <button id="resetWorksSettings" type="button">Restaurar padrão das obras</button>
+                <button id="resetSiteSettings" type="button">Restaurar todos os ajustes</button>
               </div>
             </div>
 
@@ -317,6 +324,6 @@
       </section>
     </main>
 
-    <script src="./app.js?v=5"></script>
+    <script src="./app.js?v=6"></script>
   </body>
 </html>
