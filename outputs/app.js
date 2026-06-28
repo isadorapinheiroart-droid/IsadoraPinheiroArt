@@ -3,6 +3,7 @@ const cartKey = "atelier-cart-v1";
 const adminSessionKey = "atelier-admin-session";
 const checkoutEndpointKey = "atelier-checkout-endpoint";
 const heroSettingsKey = "atelier-hero-settings-v1";
+const siteSettingsKey = "atelier-site-settings-v1";
 const adminPassword = "atelier2026";
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -42,6 +43,19 @@ const els = {
   checkoutNote: document.querySelector("#checkoutNote"),
   checkoutEndpointInput: document.querySelector("#checkoutEndpointInput"),
   saveCheckoutEndpoint: document.querySelector("#saveCheckoutEndpoint"),
+  navHomeLink: document.querySelector("#navHomeLink"),
+  navAboutLink: document.querySelector("#navAboutLink"),
+  navWorksLink: document.querySelector("#navWorksLink"),
+  brandMark: document.querySelector("#brandMark"),
+  servicesSubtitle: document.querySelector("#servicesSubtitle"),
+  servicesTitle: document.querySelector("#servicesTitle"),
+  servicesText: document.querySelector("#servicesText"),
+  processSubtitle: document.querySelector("#processSubtitle"),
+  processTitle: document.querySelector("#processTitle"),
+  processText: document.querySelector("#processText"),
+  contactSubtitle: document.querySelector("#contactSubtitle"),
+  contactTitle: document.querySelector("#contactTitle"),
+  contactText: document.querySelector("#contactText"),
 };
 
 const fields = {
@@ -64,6 +78,39 @@ const fields = {
 let products = loadProducts();
 let cart = loadCart();
 
+const defaultSiteSettings = {
+  nav: {
+    home: "Início",
+    about: "Sobre",
+    works: "Obras",
+    cart: "Carrinho",
+    brand: "IP",
+    x: 0,
+    y: 0,
+    scale: 100,
+  },
+  sections: {
+    services: {
+      subtitle: "Serviços",
+      title: "Originais, prints e encomendas",
+      text: "Escolha uma obra disponível ou use o contato para conversar sobre peças autorais para o seu espaço.",
+    },
+    process: {
+      subtitle: "Processo",
+      title: "Da pintura ao envio",
+      text: "Cada obra é conferida, embalada com cuidado e preparada para chegar com segurança ao seu novo espaço.",
+    },
+    contact: {
+      subtitle: "Contato",
+      title: "Encomendas e dúvidas",
+      text: "Use o carrinho para escolher suas obras favoritas e finalizar o pedido quando o checkout estiver configurado.",
+    },
+  },
+  works: {
+    scale: 100,
+  },
+};
+
 function loadHeroSettings() {
   const saved = localStorage.getItem(heroSettingsKey);
   return saved ? JSON.parse(saved) : null;
@@ -83,6 +130,54 @@ function applyHeroSettings() {
   root.style.setProperty("--hero-pos-x", `${settings.x ?? 50}%`);
   root.style.setProperty("--hero-pos-y", `${settings.y ?? 0}%`);
   root.style.setProperty("--hero-size", `${settings.scale ?? 100}% auto`);
+}
+
+function mergeSiteSettings(saved = {}) {
+  return {
+    nav: { ...defaultSiteSettings.nav, ...(saved.nav || {}) },
+    sections: {
+      services: { ...defaultSiteSettings.sections.services, ...(saved.sections?.services || {}) },
+      process: { ...defaultSiteSettings.sections.process, ...(saved.sections?.process || {}) },
+      contact: { ...defaultSiteSettings.sections.contact, ...(saved.sections?.contact || {}) },
+    },
+    works: { ...defaultSiteSettings.works, ...(saved.works || {}) },
+  };
+}
+
+function loadSiteSettings() {
+  const saved = localStorage.getItem(siteSettingsKey);
+  return mergeSiteSettings(saved ? JSON.parse(saved) : {});
+}
+
+function setCartButtonText(text) {
+  const count = els.cartCount.textContent || "0";
+  els.cartTrigger.textContent = `${text || defaultSiteSettings.nav.cart} `;
+  els.cartTrigger.appendChild(els.cartCount);
+  els.cartCount.textContent = count;
+}
+
+function applySiteSettings() {
+  const settings = loadSiteSettings();
+  const root = document.documentElement;
+  els.navHomeLink.textContent = settings.nav.home;
+  els.navAboutLink.textContent = settings.nav.about;
+  els.navWorksLink.textContent = settings.nav.works;
+  els.brandMark.textContent = settings.nav.brand;
+  setCartButtonText(settings.nav.cart);
+  root.style.setProperty("--nav-offset-x", `${settings.nav.x}px`);
+  root.style.setProperty("--nav-offset-y", `${settings.nav.y}px`);
+  root.style.setProperty("--nav-scale", String((Number(settings.nav.scale) || 100) / 100));
+  root.style.setProperty("--works-scale", String((Number(settings.works.scale) || 100) / 100));
+
+  els.servicesSubtitle.textContent = settings.sections.services.subtitle;
+  els.servicesTitle.textContent = settings.sections.services.title;
+  els.servicesText.textContent = settings.sections.services.text;
+  els.processSubtitle.textContent = settings.sections.process.subtitle;
+  els.processTitle.textContent = settings.sections.process.title;
+  els.processText.textContent = settings.sections.process.text;
+  els.contactSubtitle.textContent = settings.sections.contact.subtitle;
+  els.contactTitle.textContent = settings.sections.contact.title;
+  els.contactText.textContent = settings.sections.contact.text;
 }
 
 function artSvg(title, bg, accent, second) {
@@ -624,6 +719,8 @@ renderImageSequence();
 renderCart();
 setAdminVisible(isAdminLoggedIn());
 applyHeroSettings();
+applySiteSettings();
 window.addEventListener("storage", (event) => {
   if (event.key === heroSettingsKey) applyHeroSettings();
+  if (event.key === siteSettingsKey) applySiteSettings();
 });

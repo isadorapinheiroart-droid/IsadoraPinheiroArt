@@ -4,16 +4,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Atelier Autoral | Galeria de Quadros</title>
-    <link rel="stylesheet" href="./styles.css?v=9" />
+    <link rel="stylesheet" href="./styles.css?v=10" />
   </head>
   <body>
     <header class="topbar">
       <nav class="nav nav-left" aria-label="Navegação principal">
-        <a href="#inicio">Início</a>
-        <a href="#sobre">Sobre</a>
-        <a href="#galeria">Obras</a>
+        <a id="navHomeLink" href="#inicio">Início</a>
+        <a id="navAboutLink" href="#sobre">Sobre</a>
+        <a id="navWorksLink" href="#galeria">Obras</a>
       </nav>
-      <a class="brand-mark" href="#inicio" aria-label="Isadora Pinheiro">IP</a>
+      <a class="brand-mark" id="brandMark" href="#inicio" aria-label="Isadora Pinheiro">IP</a>
       <nav class="nav">
         <button class="cart-trigger" id="cartTrigger" type="button">Carrinho <span id="cartCount">0</span></button>
       </nav>
@@ -96,26 +96,26 @@
 
       <section class="process-band" id="servicos">
         <div>
-          <p class="eyebrow">Serviços</p>
-          <h2>Originais, prints e encomendas</h2>
+          <p class="eyebrow" id="servicesSubtitle">Serviços</p>
+          <h2 id="servicesTitle">Originais, prints e encomendas</h2>
         </div>
-        <p>Escolha uma obra disponível ou use o contato para conversar sobre peças autorais para o seu espaço.</p>
+        <p id="servicesText">Escolha uma obra disponível ou use o contato para conversar sobre peças autorais para o seu espaço.</p>
       </section>
 
       <section class="process-band" id="processo">
         <div>
-          <p class="eyebrow">Processo</p>
-          <h2>Da pintura ao envio</h2>
+          <p class="eyebrow" id="processSubtitle">Processo</p>
+          <h2 id="processTitle">Da pintura ao envio</h2>
         </div>
-        <p>Cada obra é conferida, embalada com cuidado e preparada para chegar com segurança ao seu novo espaço.</p>
+        <p id="processText">Cada obra é conferida, embalada com cuidado e preparada para chegar com segurança ao seu novo espaço.</p>
       </section>
 
       <section class="process-band contact-band" id="contato">
         <div>
-          <p class="eyebrow">Contato</p>
-          <h2>Encomendas e dúvidas</h2>
+          <p class="eyebrow" id="contactSubtitle">Contato</p>
+          <h2 id="contactTitle">Encomendas e dúvidas</h2>
         </div>
-        <p>Use o carrinho para escolher suas obras favoritas e finalizar o pedido quando o checkout estiver configurado.</p>
+        <p id="contactText">Use o carrinho para escolher suas obras favoritas e finalizar o pedido quando o checkout estiver configurado.</p>
       </section>
 
       <section class="admin admin-locked" id="admin" hidden>
@@ -265,6 +265,6 @@
       <div class="modal-body" id="modalBody"></div>
     </dialog>
 
-    <script src="./app.js?v=9"></script>
+    <script src="./app.js?v=10"></script>
   </body>
 </html>

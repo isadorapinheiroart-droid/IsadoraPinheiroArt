@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Admin | Atelier Autoral</title>
-    <link rel="stylesheet" href="./styles.css?v=4" />
+    <link rel="stylesheet" href="./styles.css?v=5" />
   </head>
   <body>
     <main>
@@ -198,6 +198,112 @@
             </div>
 
             <div class="panel settings">
+              <h3>Botões do topo</h3>
+              <p>Edite o texto, escala e posição do menu sobre a imagem inicial.</p>
+              <div class="split">
+                <label>
+                  Botão inicial
+                  <input id="navHomeInput" />
+                </label>
+                <label>
+                  Botão sobre
+                  <input id="navAboutInput" />
+                </label>
+              </div>
+              <div class="split">
+                <label>
+                  Botão obras
+                  <input id="navWorksInput" />
+                </label>
+                <label>
+                  Botão carrinho
+                  <input id="navCartInput" />
+                </label>
+              </div>
+              <label>
+                Texto central
+                <input id="navBrandInput" />
+              </label>
+              <div class="split">
+                <label>
+                  Posição horizontal
+                  <input id="navXInput" type="range" min="-240" max="240" value="0" />
+                </label>
+                <label>
+                  Posição vertical
+                  <input id="navYInput" type="range" min="-80" max="180" value="0" />
+                </label>
+              </div>
+              <label>
+                Escala dos botões
+                <input id="navScaleInput" type="range" min="60" max="180" value="100" />
+              </label>
+            </div>
+
+            <div class="panel settings">
+              <h3>Textos das seções</h3>
+              <p>Edite títulos, subtítulos e textos exibidos abaixo da galeria.</p>
+              <div class="content-editor">
+                <h4>Serviços</h4>
+                <label>
+                  Subtítulo
+                  <input id="servicesSubtitleInput" />
+                </label>
+                <label>
+                  Título
+                  <input id="servicesTitleInput" />
+                </label>
+                <label>
+                  Texto
+                  <textarea id="servicesTextInput" rows="4"></textarea>
+                </label>
+              </div>
+              <div class="content-editor">
+                <h4>Processo</h4>
+                <label>
+                  Subtítulo
+                  <input id="processSubtitleInput" />
+                </label>
+                <label>
+                  Título
+                  <input id="processTitleInput" />
+                </label>
+                <label>
+                  Texto
+                  <textarea id="processTextInput" rows="4"></textarea>
+                </label>
+              </div>
+              <div class="content-editor">
+                <h4>Contato</h4>
+                <label>
+                  Subtítulo
+                  <input id="contactSubtitleInput" />
+                </label>
+                <label>
+                  Título
+                  <input id="contactTitleInput" />
+                </label>
+                <label>
+                  Texto
+                  <textarea id="contactTextInput" rows="4"></textarea>
+                </label>
+              </div>
+            </div>
+
+            <div class="panel settings">
+              <h3>Obras</h3>
+              <p>Ajuste a escala dos cards, imagens e textos da sessão de obras.</p>
+              <label>
+                Escala da sessão de obras
+                <input id="worksScaleInput" type="range" min="70" max="150" value="100" />
+              </label>
+              <div class="actions">
+                <button class="primary" id="saveSiteSettings" type="button">Salvar ajustes do site</button>
+                <button id="resetSiteSettings" type="button">Restaurar ajustes</button>
+              </div>
+            </div>
+
+            <div class="panel settings">
               <h3>Mercado Pago</h3>
               <p>Informe o endpoint seguro do seu backend. Ele deve criar a preferência de pagamento no Mercado Pago e retornar `init_point`.</p>
               <label>
@@ -211,6 +317,6 @@
       </section>
     </main>
 
-    <script src="./app.js?v=4"></script>
+    <script src="./app.js?v=5"></script>
   </body>
 </html>

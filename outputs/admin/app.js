@@ -3,6 +3,7 @@ const usersKey = "atelier-admin-users-v1";
 const sessionKey = "atelier-admin-site-session";
 const checkoutEndpointKey = "atelier-checkout-endpoint";
 const heroSettingsKey = "atelier-hero-settings-v1";
+const siteSettingsKey = "atelier-site-settings-v1";
 
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -35,6 +36,26 @@ const els = {
   heroScaleInput: document.querySelector("#heroScaleInput"),
   saveHeroSettings: document.querySelector("#saveHeroSettings"),
   resetHeroSettings: document.querySelector("#resetHeroSettings"),
+  navHomeInput: document.querySelector("#navHomeInput"),
+  navAboutInput: document.querySelector("#navAboutInput"),
+  navWorksInput: document.querySelector("#navWorksInput"),
+  navCartInput: document.querySelector("#navCartInput"),
+  navBrandInput: document.querySelector("#navBrandInput"),
+  navXInput: document.querySelector("#navXInput"),
+  navYInput: document.querySelector("#navYInput"),
+  navScaleInput: document.querySelector("#navScaleInput"),
+  servicesSubtitleInput: document.querySelector("#servicesSubtitleInput"),
+  servicesTitleInput: document.querySelector("#servicesTitleInput"),
+  servicesTextInput: document.querySelector("#servicesTextInput"),
+  processSubtitleInput: document.querySelector("#processSubtitleInput"),
+  processTitleInput: document.querySelector("#processTitleInput"),
+  processTextInput: document.querySelector("#processTextInput"),
+  contactSubtitleInput: document.querySelector("#contactSubtitleInput"),
+  contactTitleInput: document.querySelector("#contactTitleInput"),
+  contactTextInput: document.querySelector("#contactTextInput"),
+  worksScaleInput: document.querySelector("#worksScaleInput"),
+  saveSiteSettings: document.querySelector("#saveSiteSettings"),
+  resetSiteSettings: document.querySelector("#resetSiteSettings"),
 };
 
 const productFields = {
@@ -64,6 +85,39 @@ const userFields = {
 let products = loadProducts();
 let users = loadUsers();
 let pendingHeroImage = "";
+
+const defaultSiteSettings = {
+  nav: {
+    home: "Início",
+    about: "Sobre",
+    works: "Obras",
+    cart: "Carrinho",
+    brand: "IP",
+    x: 0,
+    y: 0,
+    scale: 100,
+  },
+  sections: {
+    services: {
+      subtitle: "Serviços",
+      title: "Originais, prints e encomendas",
+      text: "Escolha uma obra disponível ou use o contato para conversar sobre peças autorais para o seu espaço.",
+    },
+    process: {
+      subtitle: "Processo",
+      title: "Da pintura ao envio",
+      text: "Cada obra é conferida, embalada com cuidado e preparada para chegar com segurança ao seu novo espaço.",
+    },
+    contact: {
+      subtitle: "Contato",
+      title: "Encomendas e dúvidas",
+      text: "Use o carrinho para escolher suas obras favoritas e finalizar o pedido quando o checkout estiver configurado.",
+    },
+  },
+  works: {
+    scale: 100,
+  },
+};
 
 function loadProducts() {
   const saved = localStorage.getItem(productKey);
@@ -101,6 +155,27 @@ function saveHeroSettings(settings) {
   localStorage.setItem(heroSettingsKey, JSON.stringify(settings));
 }
 
+function mergeSiteSettings(saved = {}) {
+  return {
+    nav: { ...defaultSiteSettings.nav, ...(saved.nav || {}) },
+    sections: {
+      services: { ...defaultSiteSettings.sections.services, ...(saved.sections?.services || {}) },
+      process: { ...defaultSiteSettings.sections.process, ...(saved.sections?.process || {}) },
+      contact: { ...defaultSiteSettings.sections.contact, ...(saved.sections?.contact || {}) },
+    },
+    works: { ...defaultSiteSettings.works, ...(saved.works || {}) },
+  };
+}
+
+function loadSiteSettings() {
+  const saved = localStorage.getItem(siteSettingsKey);
+  return mergeSiteSettings(saved ? JSON.parse(saved) : {});
+}
+
+function saveSiteSettings(settings) {
+  localStorage.setItem(siteSettingsKey, JSON.stringify(settings));
+}
+
 function applyHeroPreview(settings = loadHeroSettings()) {
   const image = pendingHeroImage || settings.image;
   if (image) document.documentElement.style.setProperty("--admin-hero-image", `url("${image}")`);
@@ -111,6 +186,64 @@ function applyHeroPreview(settings = loadHeroSettings()) {
   els.heroXInput.value = settings.x ?? 50;
   els.heroYInput.value = settings.y ?? 0;
   els.heroScaleInput.value = settings.scale ?? 100;
+}
+
+function populateSiteSettings(settings = loadSiteSettings()) {
+  els.navHomeInput.value = settings.nav.home;
+  els.navAboutInput.value = settings.nav.about;
+  els.navWorksInput.value = settings.nav.works;
+  els.navCartInput.value = settings.nav.cart;
+  els.navBrandInput.value = settings.nav.brand;
+  els.navXInput.value = settings.nav.x;
+  els.navYInput.value = settings.nav.y;
+  els.navScaleInput.value = settings.nav.scale;
+  els.servicesSubtitleInput.value = settings.sections.services.subtitle;
+  els.servicesTitleInput.value = settings.sections.services.title;
+  els.servicesTextInput.value = settings.sections.services.text;
+  els.processSubtitleInput.value = settings.sections.process.subtitle;
+  els.processTitleInput.value = settings.sections.process.title;
+  els.processTextInput.value = settings.sections.process.text;
+  els.contactSubtitleInput.value = settings.sections.contact.subtitle;
+  els.contactTitleInput.value = settings.sections.contact.title;
+  els.contactTextInput.value = settings.sections.contact.text;
+  els.worksScaleInput.value = settings.works.scale;
+  document.documentElement.style.setProperty("--admin-nav-scale", String((Number(settings.nav.scale) || 100) / 100));
+  document.documentElement.style.setProperty("--admin-works-scale", String((Number(settings.works.scale) || 100) / 100));
+}
+
+function readSiteSettingsForm() {
+  return mergeSiteSettings({
+    nav: {
+      home: els.navHomeInput.value.trim() || defaultSiteSettings.nav.home,
+      about: els.navAboutInput.value.trim() || defaultSiteSettings.nav.about,
+      works: els.navWorksInput.value.trim() || defaultSiteSettings.nav.works,
+      cart: els.navCartInput.value.trim() || defaultSiteSettings.nav.cart,
+      brand: els.navBrandInput.value.trim() || defaultSiteSettings.nav.brand,
+      x: Number(els.navXInput.value),
+      y: Number(els.navYInput.value),
+      scale: Number(els.navScaleInput.value),
+    },
+    sections: {
+      services: {
+        subtitle: els.servicesSubtitleInput.value.trim() || defaultSiteSettings.sections.services.subtitle,
+        title: els.servicesTitleInput.value.trim() || defaultSiteSettings.sections.services.title,
+        text: els.servicesTextInput.value.trim() || defaultSiteSettings.sections.services.text,
+      },
+      process: {
+        subtitle: els.processSubtitleInput.value.trim() || defaultSiteSettings.sections.process.subtitle,
+        title: els.processTitleInput.value.trim() || defaultSiteSettings.sections.process.title,
+        text: els.processTextInput.value.trim() || defaultSiteSettings.sections.process.text,
+      },
+      contact: {
+        subtitle: els.contactSubtitleInput.value.trim() || defaultSiteSettings.sections.contact.subtitle,
+        title: els.contactTitleInput.value.trim() || defaultSiteSettings.sections.contact.title,
+        text: els.contactTextInput.value.trim() || defaultSiteSettings.sections.contact.text,
+      },
+    },
+    works: {
+      scale: Number(els.worksScaleInput.value),
+    },
+  });
 }
 
 function currentUser() {
@@ -133,6 +266,7 @@ function setAuthenticated(user) {
     els.sessionUser.textContent = `${user.name} · ${user.role}`;
     els.checkoutEndpointInput.value = localStorage.getItem(checkoutEndpointKey) || "";
     applyHeroPreview();
+    populateSiteSettings();
     renderAll();
   } else {
     localStorage.removeItem(sessionKey);
@@ -433,6 +567,27 @@ els.resetHeroSettings.addEventListener("click", () => {
   pendingHeroImage = "";
   els.heroImageInput.value = "";
   applyHeroPreview(loadHeroSettings());
+});
+[
+  els.navXInput,
+  els.navYInput,
+  els.navScaleInput,
+  els.worksScaleInput,
+].forEach((input) => {
+  input.addEventListener("input", () => {
+    const settings = readSiteSettingsForm();
+    document.documentElement.style.setProperty("--admin-nav-scale", String((Number(settings.nav.scale) || 100) / 100));
+    document.documentElement.style.setProperty("--admin-works-scale", String((Number(settings.works.scale) || 100) / 100));
+  });
+});
+els.saveSiteSettings.addEventListener("click", () => {
+  const settings = readSiteSettingsForm();
+  saveSiteSettings(settings);
+  populateSiteSettings(settings);
+});
+els.resetSiteSettings.addEventListener("click", () => {
+  localStorage.removeItem(siteSettingsKey);
+  populateSiteSettings(loadSiteSettings());
 });
 
 setAuthenticated(currentUser());
