@@ -1,0 +1,13 @@
+{
+  "name": "isadora-pinheiro-art",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Site de vendas Isadora Pinheiro Art com Checkout Pro Mercado Pago.",
+  "scripts": {
+    "start": "vercel dev",
+    "check": "node --check api/checkout.js && node --check outputs/app.js && node --check outputs/config.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

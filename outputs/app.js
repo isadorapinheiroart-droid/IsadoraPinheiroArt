@@ -5,6 +5,7 @@ const checkoutEndpointKey = "atelier-checkout-endpoint";
 const heroSettingsKey = "atelier-hero-settings-v1";
 const siteSettingsKey = "atelier-site-settings-v1";
 const adminPassword = "atelier2026";
+const publicConfig = window.ATELIER_CONFIG || {};
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
 const els = {
@@ -484,10 +485,14 @@ function renderCart() {
   });
 }
 
+function checkoutEndpoint() {
+  return localStorage.getItem(checkoutEndpointKey) || publicConfig.checkoutEndpoint || "";
+}
+
 async function startCheckout() {
   const items = cartProducts();
   if (!items.length) return;
-  const endpoint = localStorage.getItem(checkoutEndpointKey);
+  const endpoint = checkoutEndpoint();
   if (!endpoint) {
     els.checkoutNote.textContent = "Checkout Mercado Pago preparado. Falta configurar um endpoint seguro no painel reservado para criar a preferência de pagamento.";
     return;
