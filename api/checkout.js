@@ -46,8 +46,12 @@ function normalizeText(value, maxLength) {
 }
 
 function normalizeDelivery(delivery) {
+  let phone = String(delivery?.phone || "").replace(/\D/g, "");
+  if ((phone.length === 12 || phone.length === 13) && phone.startsWith("55")) phone = phone.slice(2);
   const normalized = {
     fullName: normalizeText(delivery?.fullName, 120),
+    email: normalizeText(delivery?.email, 160).toLowerCase(),
+    phone,
     address: normalizeText(delivery?.address, 240),
     number: normalizeText(delivery?.number, 30),
     postalCode: String(delivery?.postalCode || "").replace(/\D/g, "").slice(0, 8),
@@ -56,11 +60,13 @@ function normalizeDelivery(delivery) {
 
   if (
     normalized.fullName.length < 3
+    || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized.email)
+    || !/^\d{10,11}$/.test(normalized.phone)
     || normalized.address.length < 8
     || !normalized.number
     || normalized.postalCode.length !== 8
   ) {
-    const error = new Error("Preencha corretamente os dados de entrega e informe um CEP com 8 numeros.");
+    const error = new Error("Preencha corretamente nome, e-mail, telefone, endereco e CEP.");
     error.statusCode = 400;
     throw error;
   }
@@ -192,11 +198,11 @@ module.exports = async function handler(req, res) {
     await ensureOrdersTable();
     await db`
       insert into atelier_orders (
-        id, order_code, status, customer_name, delivery_address,
+        id, order_code, status, customer_name, customer_email, customer_phone, delivery_address,
         address_number, postal_code, reference_point, items,
         shipping_price, shipping_region, shipping_min_days, shipping_max_days, total
       ) values (
-        ${orderId}, ${orderCode}, 'creating_payment', ${delivery.fullName}, ${delivery.address},
+        ${orderId}, ${orderCode}, 'creating_payment', ${delivery.fullName}, ${delivery.email}, ${delivery.phone}, ${delivery.address},
         ${delivery.number}, ${delivery.postalCode}, ${delivery.referencePoint || null},
         ${db.json(items)}, ${shippingPrice.toFixed(2)}, ${shipping.regionName || null},
         ${shipping.minDays || null}, ${shipping.maxDays || null}, ${total.toFixed(2)}
@@ -226,6 +232,11 @@ module.exports = async function handler(req, res) {
     payer: {
       name: payerName,
       ...(payerSurname ? { surname: payerSurname } : {}),
+      email: delivery.email,
+      phone: {
+        area_code: delivery.phone.slice(0, 2),
+        number: delivery.phone.slice(2),
+      },
     },
     back_urls: {
       success: `${siteBaseUrl}/outputs/index.html#pedido-aprovado`,

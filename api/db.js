@@ -41,6 +41,8 @@ async function ensureOrdersTable() {
       order_code text unique not null,
       status text not null default 'pending_payment',
       customer_name text not null,
+      customer_email text not null,
+      customer_phone text not null,
       delivery_address text not null,
       address_number text not null,
       postal_code text not null,
@@ -62,6 +64,8 @@ async function ensureOrdersTable() {
       paid_at timestamptz
     )
   `;
+  await db`alter table atelier_orders add column if not exists customer_email text`;
+  await db`alter table atelier_orders add column if not exists customer_phone text`;
   await db`alter table atelier_orders add column if not exists shipping_price numeric(12, 2) not null default 0`;
   await db`alter table atelier_orders add column if not exists shipping_region text`;
   await db`alter table atelier_orders add column if not exists shipping_min_days integer`;

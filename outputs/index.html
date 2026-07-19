@@ -273,6 +273,16 @@
             Nome completo
             <input id="deliveryFullName" name="fullName" autocomplete="name" minlength="3" maxlength="120" required />
           </label>
+          <div class="delivery-split">
+            <label>
+              E-mail
+              <input id="deliveryEmail" name="email" type="email" autocomplete="email" maxlength="160" required />
+            </label>
+            <label>
+              Telefone para contato
+              <input id="deliveryPhone" name="phone" type="tel" autocomplete="tel" inputmode="tel" minlength="14" maxlength="16" placeholder="(00) 00000-0000" required />
+            </label>
+          </div>
           <label>
             Endereço completo
             <textarea id="deliveryAddress" name="address" autocomplete="street-address" rows="3" minlength="8" maxlength="240" placeholder="Rua, bairro, cidade e estado" required></textarea>
@@ -307,6 +317,6 @@
     </dialog>
 
     <script src="/outputs/config.js?v=2"></script>
-    <script src="/outputs/app.js?v=12"></script>
+    <script src="/outputs/app.js?v=13"></script>
   </body>
 </html>

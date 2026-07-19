@@ -49,6 +49,8 @@ const els = {
   checkoutNote: document.querySelector("#checkoutNote"),
   deliveryForm: document.querySelector("#deliveryForm"),
   deliveryFullName: document.querySelector("#deliveryFullName"),
+  deliveryEmail: document.querySelector("#deliveryEmail"),
+  deliveryPhone: document.querySelector("#deliveryPhone"),
   deliveryAddress: document.querySelector("#deliveryAddress"),
   deliveryNumber: document.querySelector("#deliveryNumber"),
   deliveryPostalCode: document.querySelector("#deliveryPostalCode"),
@@ -677,6 +679,8 @@ async function startCheckout() {
         shippingPrice: shippingQuoteMatches(items) ? Number(shippingQuote.price || 0) : null,
         delivery: {
           fullName: els.deliveryFullName.value.trim(),
+          email: els.deliveryEmail.value.trim(),
+          phone: els.deliveryPhone.value.replace(/\D/g, ""),
           address: els.deliveryAddress.value.trim(),
           number: els.deliveryNumber.value.trim(),
           postalCode: els.deliveryPostalCode.value.replace(/\D/g, ""),
@@ -895,6 +899,17 @@ els.deliveryPostalCode.addEventListener("input", () => {
   const digits = els.deliveryPostalCode.value.replace(/\D/g, "").slice(0, 8);
   els.deliveryPostalCode.value = digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
   renderCart();
+});
+els.deliveryPhone.addEventListener("input", () => {
+  const digits = els.deliveryPhone.value.replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 2) {
+    els.deliveryPhone.value = digits;
+    return;
+  }
+  const areaCode = digits.slice(0, 2);
+  const firstPart = digits.length === 11 ? digits.slice(2, 7) : digits.slice(2, 6);
+  const lastPart = digits.length === 11 ? digits.slice(7) : digits.slice(6);
+  els.deliveryPhone.value = `(${areaCode}) ${firstPart}${lastPart ? `-${lastPart}` : ""}`;
 });
 els.saveCheckoutEndpoint.addEventListener("click", () => {
   localStorage.setItem(checkoutEndpointKey, els.checkoutEndpointInput.value.trim());

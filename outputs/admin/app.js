@@ -773,6 +773,13 @@ function formatPostalCode(value) {
   return digits.length === 8 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
 }
 
+function formatPhone(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+  if (digits.length === 11) return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  if (digits.length === 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  return digits || "Não informado";
+}
+
 function renderOrders(orders) {
   els.orderCount.textContent = `${orders.length} ${orders.length === 1 ? "pedido" : "pedidos"}`;
   if (!orders.length) {
@@ -788,7 +795,7 @@ function renderOrders(orders) {
     const paymentId = order.mp_payment_id
       ? `<p><strong>Pagamento MP:</strong> ${escapeHtml(order.mp_payment_id)}</p>`
       : `<p>O cliente ainda não concluiu o pagamento.</p>`;
-    const payerEmail = order.payer_email
+    const payerEmail = order.payer_email && order.payer_email !== order.customer_email
       ? `<p><strong>E-mail Mercado Pago:</strong> ${escapeHtml(order.payer_email)}</p>`
       : "";
     const shippingPrice = Number(order.shipping_price || 0);
@@ -811,6 +818,8 @@ function renderOrders(orders) {
           <section>
             <h5>Cliente e entrega</h5>
             <p><strong>${escapeHtml(order.customer_name)}</strong></p>
+            <p><strong>E-mail:</strong> ${escapeHtml(order.customer_email || "Não informado")}</p>
+            <p><strong>Telefone:</strong> ${escapeHtml(formatPhone(order.customer_phone))}</p>
             <address>
               ${escapeHtml(order.delivery_address)}<br>
               Número / apartamento: ${escapeHtml(order.address_number)}<br>
