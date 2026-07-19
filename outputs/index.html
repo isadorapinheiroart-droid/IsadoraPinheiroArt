@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Isadora Pinheiro Pinturas Originais | Galeria de Quadros</title>
-    <link rel="stylesheet" href="/outputs/styles.css?v=11" />
+    <link rel="stylesheet" href="/outputs/styles.css?v=12" />
   </head>
   <body>
     <header class="topbar">
@@ -255,8 +255,37 @@
           <span>Total</span>
           <strong id="cartTotal">R$ 0,00</strong>
         </div>
-        <p class="checkout-note" id="checkoutNote"></p>
-        <button class="primary-button checkout-button" id="checkoutButton" type="button">Finalizar compra</button>
+        <form class="delivery-form" id="deliveryForm">
+          <div class="delivery-heading">
+            <p class="eyebrow">Entrega</p>
+            <h3>Dados para receber o quadro</h3>
+            <p>Preencha com atenção. Esses dados serão enviados à artista após a confirmação do pagamento.</p>
+          </div>
+          <label>
+            Nome completo
+            <input id="deliveryFullName" name="fullName" autocomplete="name" minlength="3" maxlength="120" required />
+          </label>
+          <label>
+            Endereço completo
+            <textarea id="deliveryAddress" name="address" autocomplete="street-address" rows="3" minlength="8" maxlength="240" placeholder="Rua, bairro, cidade e estado" required></textarea>
+          </label>
+          <div class="delivery-split">
+            <label>
+              Número / apartamento
+              <input id="deliveryNumber" name="number" autocomplete="address-line2" maxlength="30" required />
+            </label>
+            <label>
+              CEP
+              <input id="deliveryPostalCode" name="postalCode" autocomplete="postal-code" inputmode="numeric" maxlength="9" placeholder="00000-000" pattern="\d{5}-?\d{3}" required />
+            </label>
+          </div>
+          <label>
+            Ponto de referência <span>(opcional)</span>
+            <input id="deliveryReferencePoint" name="referencePoint" maxlength="160" />
+          </label>
+          <p class="checkout-note" id="checkoutNote"></p>
+          <button class="primary-button checkout-button" id="checkoutButton" type="submit">Ir para o pagamento seguro</button>
+        </form>
       </div>
     </dialog>
 
@@ -266,6 +295,6 @@
     </dialog>
 
     <script src="/outputs/config.js?v=1"></script>
-    <script src="/outputs/app.js?v=10"></script>
+    <script src="/outputs/app.js?v=11"></script>
   </body>
 </html>

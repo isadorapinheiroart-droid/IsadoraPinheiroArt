@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Admin | Isadora Pinheiro Pinturas Originais</title>
-    <link rel="stylesheet" href="/outputs/admin/styles.css?v=6" />
+    <link rel="stylesheet" href="/outputs/admin/styles.css?v=7" />
   </head>
   <body>
     <main>
@@ -33,7 +33,8 @@
           </div>
           <nav>
             <button class="tab active" type="button" data-view="products">Obras e estoque</button>
-            <button class="tab" type="button" data-view="users">Usuários</button>
+            <button class="tab" type="button" data-view="orders">Pedidos</button>
+            <button class="tab" type="button" data-view="users" hidden>Usuários</button>
             <button class="tab" type="button" data-view="settings">Configurações</button>
           </nav>
           <div class="session">
@@ -134,7 +135,21 @@
             </div>
           </section>
 
-          <section class="view" id="usersView">
+          <section class="view" id="ordersView">
+            <div class="panel orders-panel">
+              <div class="panel-head">
+                <div>
+                  <h3>Pedidos recebidos</h3>
+                  <span id="orderCount">0 pedidos</span>
+                </div>
+                <button id="refreshOrders" type="button">Atualizar pedidos</button>
+              </div>
+              <p class="sync-status" id="ordersStatus"></p>
+              <div class="orders-list" id="ordersList"></div>
+            </div>
+          </section>
+
+          <section class="view" id="usersView" hidden>
             <div class="grid">
               <form class="panel form" id="userForm">
                 <input type="hidden" id="editingUser" />
@@ -316,7 +331,7 @@
 
             <div class="panel settings">
               <h3>Mercado Pago</h3>
-              <p>Informe o endpoint seguro do seu backend. Ele deve criar a preferência de pagamento no Mercado Pago e retornar `init_point`.</p>
+              <p>O checkout salva o pedido e usa o webhook <strong>/api/mercado-pago-webhook</strong> para atualizar o pagamento automaticamente. O endpoint padrão abaixo já está pronto para a Vercel.</p>
               <label>
                 Endpoint de checkout
                 <input id="checkoutEndpointInput" placeholder="https://seu-backend.com/api/checkout" />
@@ -329,6 +344,6 @@
     </main>
 
     <script src="/outputs/config.js?v=1"></script>
-    <script src="/outputs/admin/app.js?v=6"></script>
+    <script src="/outputs/admin/app.js?v=7"></script>
   </body>
 </html>

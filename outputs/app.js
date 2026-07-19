@@ -43,6 +43,12 @@ const els = {
   cartTotal: document.querySelector("#cartTotal"),
   checkoutButton: document.querySelector("#checkoutButton"),
   checkoutNote: document.querySelector("#checkoutNote"),
+  deliveryForm: document.querySelector("#deliveryForm"),
+  deliveryFullName: document.querySelector("#deliveryFullName"),
+  deliveryAddress: document.querySelector("#deliveryAddress"),
+  deliveryNumber: document.querySelector("#deliveryNumber"),
+  deliveryPostalCode: document.querySelector("#deliveryPostalCode"),
+  deliveryReferencePoint: document.querySelector("#deliveryReferencePoint"),
   checkoutEndpointInput: document.querySelector("#checkoutEndpointInput"),
   saveCheckoutEndpoint: document.querySelector("#saveCheckoutEndpoint"),
   navHomeLink: document.querySelector("#navHomeLink"),
@@ -558,6 +564,13 @@ async function startCheckout() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        delivery: {
+          fullName: els.deliveryFullName.value.trim(),
+          address: els.deliveryAddress.value.trim(),
+          number: els.deliveryNumber.value.trim(),
+          postalCode: els.deliveryPostalCode.value.replace(/\D/g, ""),
+          referencePoint: els.deliveryReferencePoint.value.trim(),
+        },
         items: items.map((product) => ({
           id: product.id,
           title: product.title,
@@ -569,10 +582,14 @@ async function startCheckout() {
     });
     const data = await response.json();
     const checkoutUrl = data.init_point || data.sandbox_init_point || data.url;
-    if (!response.ok || !checkoutUrl) throw new Error("Resposta de checkout inválida.");
+    if (!response.ok || !checkoutUrl) throw new Error(data.error || "Resposta de checkout inválida.");
+    sessionStorage.setItem("atelier-pending-order", JSON.stringify({
+      id: data.order_id,
+      code: data.order_code,
+    }));
     window.location.href = checkoutUrl;
   } catch (error) {
-    els.checkoutNote.textContent = "Não foi possível iniciar o pagamento. Confira o endpoint Mercado Pago no painel reservado.";
+    els.checkoutNote.textContent = error.message || "Não foi possível iniciar o pagamento. Tente novamente.";
   } finally {
     els.checkoutButton.disabled = false;
   }
@@ -751,7 +768,14 @@ els.cartTrigger.addEventListener("click", () => {
   els.cartDrawer.showModal();
 });
 els.closeCart.addEventListener("click", () => els.cartDrawer.close());
-els.checkoutButton.addEventListener("click", startCheckout);
+els.deliveryForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  startCheckout();
+});
+els.deliveryPostalCode.addEventListener("input", () => {
+  const digits = els.deliveryPostalCode.value.replace(/\D/g, "").slice(0, 8);
+  els.deliveryPostalCode.value = digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
+});
 els.saveCheckoutEndpoint.addEventListener("click", () => {
   localStorage.setItem(checkoutEndpointKey, els.checkoutEndpointInput.value.trim());
   els.checkoutEndpointInput.value = localStorage.getItem(checkoutEndpointKey) || "";

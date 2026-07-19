@@ -26,6 +26,10 @@ const els = {
   productCount: document.querySelector("#productCount"),
   syncDatabase: document.querySelector("#syncDatabase"),
   databaseStatus: document.querySelector("#databaseStatus"),
+  orderList: document.querySelector("#ordersList"),
+  orderCount: document.querySelector("#orderCount"),
+  ordersStatus: document.querySelector("#ordersStatus"),
+  refreshOrders: document.querySelector("#refreshOrders"),
   photoSequence: document.querySelector("#photoSequence"),
   similarInput: document.querySelector("#similarInput"),
   userForm: document.querySelector("#userForm"),
@@ -94,6 +98,7 @@ const userFields = {
 let products = loadProducts();
 let users = loadUsers();
 let pendingHeroImage = "";
+let authenticatedUser = null;
 
 const defaultSiteSettings = {
   nav: {
@@ -360,8 +365,7 @@ function restoreSitePart(part) {
 }
 
 function currentUser() {
-  const id = localStorage.getItem(sessionKey);
-  return users.find((user) => user.id === id);
+  return authenticatedUser;
 }
 
 function requireAuth() {
@@ -371,8 +375,9 @@ function requireAuth() {
 }
 
 function setAuthenticated(user) {
+  authenticatedUser = user || null;
   if (user) {
-    localStorage.setItem(sessionKey, user.id);
+    localStorage.removeItem(sessionKey);
     els.loginScreen.hidden = true;
     els.adminApp.hidden = false;
     document.body.classList.remove("locked");
@@ -383,11 +388,26 @@ function setAuthenticated(user) {
     renderAll();
     syncProductsFromDatabase();
     syncSettingsFromDatabase();
+    loadOrders();
   } else {
     localStorage.removeItem(sessionKey);
     els.loginScreen.hidden = false;
     els.adminApp.hidden = true;
     document.body.classList.add("locked");
+  }
+}
+
+async function restoreAdminSession() {
+  try {
+    const response = await fetch("/api/admin-session", {
+      headers: { Accept: "application/json" },
+      credentials: "same-origin",
+    });
+    if (!response.ok) throw new Error("Sessao indisponivel.");
+    const data = await response.json();
+    setAuthenticated(data.user);
+  } catch {
+    setAuthenticated(null);
   }
 }
 
@@ -609,11 +629,147 @@ function saveUser(event) {
   renderUsers();
 }
 
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>'"]/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "'": "&#39;",
+    "\"": "&quot;",
+  })[character]);
+}
+
+function orderStatusLabel(status) {
+  const labels = {
+    approved: "Pago",
+    pending_payment: "Aguardando pagamento",
+    creating_payment: "Criando pagamento",
+    pending: "Pagamento pendente",
+    in_process: "Em análise",
+    rejected: "Pagamento recusado",
+    cancelled: "Cancelado",
+    refunded: "Reembolsado",
+    charged_back: "Contestado",
+    checkout_error: "Checkout não concluído",
+    payment_review: "Verificar pagamento",
+  };
+  return labels[status] || "Aguardando atualização";
+}
+
+function formatOrderDate(value) {
+  if (!value) return "-";
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+function formatPostalCode(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+  return digits.length === 8 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
+}
+
+function renderOrders(orders) {
+  els.orderCount.textContent = `${orders.length} ${orders.length === 1 ? "pedido" : "pedidos"}`;
+  if (!orders.length) {
+    els.orderList.innerHTML = `<div class="empty-orders">Nenhum pedido foi iniciado ainda.</div>`;
+    return;
+  }
+
+  els.orderList.innerHTML = orders.map((order) => {
+    const items = Array.isArray(order.items) ? order.items : [];
+    const reference = order.reference_point
+      ? `<p><strong>Referência:</strong> ${escapeHtml(order.reference_point)}</p>`
+      : "";
+    const paymentId = order.mp_payment_id
+      ? `<p><strong>Pagamento MP:</strong> ${escapeHtml(order.mp_payment_id)}</p>`
+      : `<p>O cliente ainda não concluiu o pagamento.</p>`;
+    const payerEmail = order.payer_email
+      ? `<p><strong>E-mail Mercado Pago:</strong> ${escapeHtml(order.payer_email)}</p>`
+      : "";
+
+    return `
+      <article class="order-card">
+        <header class="order-card-head">
+          <div>
+            <h4>Pedido ${escapeHtml(order.order_code)}</h4>
+            <p class="meta">Criado em ${escapeHtml(formatOrderDate(order.created_at))}</p>
+          </div>
+          <span class="order-status ${escapeHtml(order.status)}">${escapeHtml(orderStatusLabel(order.status))}</span>
+        </header>
+        <div class="order-details">
+          <section>
+            <h5>Cliente e entrega</h5>
+            <p><strong>${escapeHtml(order.customer_name)}</strong></p>
+            <address>
+              ${escapeHtml(order.delivery_address)}<br>
+              Número / apartamento: ${escapeHtml(order.address_number)}<br>
+              CEP: ${escapeHtml(formatPostalCode(order.postal_code))}
+            </address>
+            ${reference}
+          </section>
+          <section>
+            <h5>Obras compradas</h5>
+            <ul class="order-items">
+              ${items.map((item) => `
+                <li>${escapeHtml(item.title)} · ${Number(item.quantity) || 1} un. · ${escapeHtml(money.format(Number(item.unit_price) || 0))}</li>
+              `).join("")}
+            </ul>
+          </section>
+          <section>
+            <h5>Pagamento</h5>
+            <p><strong>Total:</strong> ${escapeHtml(money.format(Number(order.total) || 0))}</p>
+            <p><strong>Status:</strong> ${escapeHtml(orderStatusLabel(order.status))}</p>
+            ${paymentId}
+            ${payerEmail}
+            ${order.paid_at ? `<p><strong>Pago em:</strong> ${escapeHtml(formatOrderDate(order.paid_at))}</p>` : ""}
+          </section>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+async function loadOrders() {
+  if (!authenticatedUser || !els.orderList) return;
+  els.refreshOrders.disabled = true;
+  els.ordersStatus.textContent = "Atualizando pedidos...";
+  els.ordersStatus.className = "sync-status";
+
+  try {
+    const response = await fetch("/api/orders", {
+      headers: { Accept: "application/json" },
+      credentials: "same-origin",
+    });
+    if (response.status === 401) {
+      setAuthenticated(null);
+      return;
+    }
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Não foi possível carregar os pedidos.");
+    renderOrders(Array.isArray(data.orders) ? data.orders : []);
+    els.ordersStatus.textContent = `Última atualização: ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
+    els.ordersStatus.className = "sync-status success";
+  } catch (error) {
+    els.ordersStatus.textContent = error.message;
+    els.ordersStatus.className = "sync-status error";
+  } finally {
+    els.refreshOrders.disabled = false;
+  }
+}
+
 function switchView(view) {
   if (!requireAuth()) return;
   els.tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.view === view));
   els.views.forEach((panel) => panel.classList.toggle("active", panel.id === `${view}View`));
-  els.viewTitle.textContent = view === "products" ? "Obras e estoque" : view === "users" ? "Usuários" : "Configurações";
+  const titles = {
+    products: "Obras e estoque",
+    orders: "Pedidos",
+    users: "Usuários",
+    settings: "Configurações",
+  };
+  els.viewTitle.textContent = titles[view] || "Painel";
+  if (view === "orders") loadOrders();
 }
 
 function renderAll() {
@@ -624,19 +780,35 @@ function renderAll() {
   renderSimilarSelect();
 }
 
-els.loginForm.addEventListener("submit", (event) => {
+els.loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const user = users.find((item) => item.login === els.loginUser.value.trim() && item.password === els.loginPassword.value);
-  if (!user) {
-    els.loginError.textContent = "Usuário ou senha incorretos.";
-    return;
+  els.loginError.textContent = "Entrando...";
+  try {
+    const response = await fetch("/api/admin-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({
+        username: els.loginUser.value.trim(),
+        password: els.loginPassword.value,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Usuário ou senha incorretos.");
+    els.loginError.textContent = "";
+    els.loginPassword.value = "";
+    setAuthenticated(data.user);
+  } catch (error) {
+    els.loginError.textContent = error.message;
   }
-  els.loginError.textContent = "";
-  setAuthenticated(user);
 });
 
-els.logoutButton.addEventListener("click", () => setAuthenticated(null));
+els.logoutButton.addEventListener("click", async () => {
+  await fetch("/api/admin-logout", { method: "POST", credentials: "same-origin" });
+  setAuthenticated(null);
+});
 els.tabs.forEach((tab) => tab.addEventListener("click", () => switchView(tab.dataset.view)));
+els.refreshOrders?.addEventListener("click", loadOrders);
 els.productForm.addEventListener("submit", saveProduct);
 document.querySelector("#newProduct").addEventListener("click", clearProductForm);
 els.syncDatabase?.addEventListener("click", syncLocalProductsToDatabase);
@@ -714,4 +886,9 @@ els.resetSiteSettings.addEventListener("click", () => {
   populateSiteSettings(settings);
 });
 
-setAuthenticated(currentUser());
+restoreAdminSession();
+
+setInterval(() => {
+  const ordersView = document.querySelector("#ordersView");
+  if (authenticatedUser && ordersView?.classList.contains("active")) loadOrders();
+}, 30000);

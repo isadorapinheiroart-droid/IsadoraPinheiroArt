@@ -14,6 +14,9 @@ Este projeto usa o Checkout Pro do Mercado Pago. O site envia o carrinho para um
 MP_ACCESS_TOKEN=APP_USR_SEU_ACCESS_TOKEN_DE_PRODUCAO
 ALLOWED_ORIGIN=https://isadora-pinheiro-art.vercel.app
 SITE_BASE_URL=https://isadora-pinheiro-art.vercel.app
+ADMIN_USER=admin
+ADMIN_PASSWORD=CRIE_UMA_SENHA_FORTE
+SESSION_SECRET=CRIE_UMA_CHAVE_LONGA_E_ALEATORIA
 ```
 
 6. Depois da publicacao, copie o endpoint gerado, por exemplo:
@@ -36,7 +39,7 @@ Como a Vercel hospeda o site e a API no mesmo projeto, `/api/checkout` e o camin
 
 Nao coloque o `Access Token` dentro do `outputs/app.js`, do HTML ou do painel admin. Esse token da acesso a sua conta Mercado Pago e deve existir apenas no servidor.
 
-No modelo atual, os produtos e precos ficam no navegador via `localStorage`. Para uma loja em producao mais segura, o ideal e mover produtos, estoque e precos para um backend ou banco de dados, para impedir alteracao de preco pelo navegador do cliente.
+Os precos usados no checkout sao consultados no banco, e nao sao aceitos diretamente do navegador do cliente.
 
 ## Banco de dados
 
@@ -51,6 +54,20 @@ site-settings
 ```
 
 Quando `DATABASE_URL` existe, o checkout tambem consulta o banco antes de enviar o cliente ao Mercado Pago, usando o preco salvo no servidor.
+
+## Pedidos e confirmacao de pagamento
+
+Antes de abrir o Mercado Pago, o checkout salva nome, endereco, numero, CEP, referencia, itens e total na tabela `atelier_orders`. Cada pedido recebe um codigo proprio e esse codigo e enviado ao Mercado Pago como `external_reference`.
+
+A preferencia informa automaticamente esta URL de notificacao:
+
+```text
+https://isadora-pinheiro-art.vercel.app/api/mercado-pago-webhook
+```
+
+Quando o Mercado Pago envia uma notificacao, o servidor consulta o pagamento usando `MP_ACCESS_TOKEN`, confere o pedido e o valor e atualiza o status no painel. O estoque e reduzido uma unica vez quando o pagamento fica aprovado.
+
+Os dados de entrega sao privados. A API de pedidos exige o login de servidor configurado por `ADMIN_USER`, `ADMIN_PASSWORD` e `SESSION_SECRET`.
 
 ## Nome publico no GitHub Pages
 
