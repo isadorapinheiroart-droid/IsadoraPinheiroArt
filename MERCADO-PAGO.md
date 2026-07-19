@@ -12,8 +12,8 @@ Este projeto usa o Checkout Pro do Mercado Pago. O site envia o carrinho para um
 
 ```env
 MP_ACCESS_TOKEN=APP_USR_SEU_ACCESS_TOKEN_DE_PRODUCAO
-ALLOWED_ORIGIN=https://isadorapinheiroart.vercel.app
-SITE_BASE_URL=https://isadorapinheiroart.vercel.app
+ALLOWED_ORIGIN=https://isadora-pinheiro-art.vercel.app
+SITE_BASE_URL=https://isadora-pinheiro-art.vercel.app
 ```
 
 6. Depois da publicacao, copie o endpoint gerado, por exemplo:

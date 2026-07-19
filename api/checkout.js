@@ -69,7 +69,7 @@ module.exports = async function handler(req, res) {
 
   const requestOrigin = req.headers.origin;
   const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "";
-  const siteBaseUrl = process.env.SITE_BASE_URL || requestOrigin || vercelUrl || "https://isadorapinheiroart.vercel.app";
+  const siteBaseUrl = process.env.SITE_BASE_URL || requestOrigin || vercelUrl || "https://isadora-pinheiro-art.vercel.app";
   const preference = {
     items,
     back_urls: {
