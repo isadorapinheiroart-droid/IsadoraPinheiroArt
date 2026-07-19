@@ -6,6 +6,7 @@ const heroSettingsKey = "atelier-hero-settings-v1";
 const siteSettingsKey = "atelier-site-settings-v1";
 const adminPassword = "atelier2026";
 const publicConfig = window.ATELIER_CONFIG || {};
+const stateEndpoint = publicConfig.stateEndpoint || "/api/state";
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
 const els = {
@@ -269,6 +270,58 @@ function loadProducts() {
 
 function saveProducts() {
   localStorage.setItem(storageKey, JSON.stringify(products));
+  savePersistentValue("products", products);
+}
+
+async function loadPersistentValue(key) {
+  try {
+    const response = await fetch(`${stateEndpoint}?key=${encodeURIComponent(key)}`, {
+      headers: { Accept: "application/json" },
+    });
+    if (!response.ok) throw new Error("Estado remoto indisponivel.");
+    const data = await response.json();
+    return data.value;
+  } catch (error) {
+    return null;
+  }
+}
+
+async function savePersistentValue(key, value) {
+  try {
+    await fetch(`${stateEndpoint}?key=${encodeURIComponent(key)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ value }),
+    });
+  } catch (error) {
+    // O navegador continua usando localStorage se o banco ainda nao estiver configurado.
+  }
+}
+
+async function syncProductsFromDatabase() {
+  const remoteProducts = await loadPersistentValue("products");
+  if (!Array.isArray(remoteProducts)) return;
+  products = remoteProducts;
+  localStorage.setItem(storageKey, JSON.stringify(products));
+  renderAll();
+  renderCart();
+}
+
+async function syncSettingsFromDatabase() {
+  const [heroSettings, siteSettings] = await Promise.all([
+    loadPersistentValue("hero-settings"),
+    loadPersistentValue("site-settings"),
+  ]);
+
+  if (heroSettings) {
+    localStorage.setItem(heroSettingsKey, JSON.stringify(heroSettings));
+    applyHeroSettings();
+  }
+
+  if (siteSettings) {
+    localStorage.setItem(siteSettingsKey, JSON.stringify(siteSettings));
+    applySiteSettings();
+  }
 }
 
 function loadCart() {
@@ -725,6 +778,8 @@ renderCart();
 setAdminVisible(isAdminLoggedIn());
 applyHeroSettings();
 applySiteSettings();
+syncProductsFromDatabase();
+syncSettingsFromDatabase();
 window.addEventListener("storage", (event) => {
   if (event.key === heroSettingsKey) applyHeroSettings();
   if (event.key === siteSettingsKey) applySiteSettings();

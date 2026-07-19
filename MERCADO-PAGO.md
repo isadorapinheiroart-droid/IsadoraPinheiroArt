@@ -38,6 +38,20 @@ Nao coloque o `Access Token` dentro do `outputs/app.js`, do HTML ou do painel ad
 
 No modelo atual, os produtos e precos ficam no navegador via `localStorage`. Para uma loja em producao mais segura, o ideal e mover produtos, estoque e precos para um backend ou banco de dados, para impedir alteracao de preco pelo navegador do cliente.
 
+## Banco de dados
+
+O projeto usa PostgreSQL via `DATABASE_URL`. Na Vercel, crie um banco pelo menu Storage/Marketplace e conecte ao projeto para que a variavel `DATABASE_URL` seja injetada automaticamente.
+
+Depois do banco conectado, o painel admin salva em `/api/state`:
+
+```text
+products
+hero-settings
+site-settings
+```
+
+Quando `DATABASE_URL` existe, o checkout tambem consulta o banco antes de enviar o cliente ao Mercado Pago, usando o preco salvo no servidor.
+
 ## Nome publico no GitHub Pages
 
 Para tirar `romulocearamor77-ops` do endereco, nao basta renomear o repositorio. Esse trecho vem do nome da conta do GitHub.

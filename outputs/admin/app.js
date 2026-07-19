@@ -4,6 +4,8 @@ const sessionKey = "atelier-admin-site-session";
 const checkoutEndpointKey = "atelier-checkout-endpoint";
 const heroSettingsKey = "atelier-hero-settings-v1";
 const siteSettingsKey = "atelier-site-settings-v1";
+const publicConfig = window.ATELIER_CONFIG || {};
+const stateEndpoint = publicConfig.stateEndpoint || "/api/state";
 
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -131,6 +133,44 @@ function loadProducts() {
 
 function saveProducts() {
   localStorage.setItem(productKey, JSON.stringify(products));
+  savePersistentValue("products", products);
+}
+
+async function loadPersistentValue(key) {
+  try {
+    const response = await fetch(`${stateEndpoint}?key=${encodeURIComponent(key)}`, {
+      headers: { Accept: "application/json" },
+    });
+    if (!response.ok) throw new Error("Estado remoto indisponivel.");
+    const data = await response.json();
+    return data.value;
+  } catch (error) {
+    return null;
+  }
+}
+
+async function savePersistentValue(key, value) {
+  try {
+    await fetch(`${stateEndpoint}?key=${encodeURIComponent(key)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ value }),
+    });
+  } catch (error) {
+    // O painel continua funcionando com localStorage se o banco ainda nao estiver conectado.
+  }
+}
+
+async function syncProductsFromDatabase() {
+  const remoteProducts = await loadPersistentValue("products");
+  if (Array.isArray(remoteProducts)) {
+    products = remoteProducts;
+    localStorage.setItem(productKey, JSON.stringify(products));
+    renderAll();
+    return;
+  }
+
+  if (products.length) savePersistentValue("products", products);
 }
 
 function loadUsers() {
@@ -158,6 +198,7 @@ function loadHeroSettings() {
 
 function saveHeroSettings(settings) {
   localStorage.setItem(heroSettingsKey, JSON.stringify(settings));
+  savePersistentValue("hero-settings", settings);
 }
 
 function mergeSiteSettings(saved = {}) {
@@ -179,6 +220,24 @@ function loadSiteSettings() {
 
 function saveSiteSettings(settings) {
   localStorage.setItem(siteSettingsKey, JSON.stringify(settings));
+  savePersistentValue("site-settings", settings);
+}
+
+async function syncSettingsFromDatabase() {
+  const [heroSettings, siteSettings] = await Promise.all([
+    loadPersistentValue("hero-settings"),
+    loadPersistentValue("site-settings"),
+  ]);
+
+  if (heroSettings) {
+    localStorage.setItem(heroSettingsKey, JSON.stringify(heroSettings));
+    applyHeroPreview(heroSettings);
+  }
+
+  if (siteSettings) {
+    localStorage.setItem(siteSettingsKey, JSON.stringify(siteSettings));
+    populateSiteSettings(siteSettings);
+  }
 }
 
 function applyHeroPreview(settings = loadHeroSettings()) {
@@ -288,6 +347,8 @@ function setAuthenticated(user) {
     applyHeroPreview();
     populateSiteSettings();
     renderAll();
+    syncProductsFromDatabase();
+    syncSettingsFromDatabase();
   } else {
     localStorage.removeItem(sessionKey);
     els.loginScreen.hidden = false;
@@ -586,7 +647,9 @@ els.resetHeroSettings.addEventListener("click", () => {
   localStorage.removeItem(heroSettingsKey);
   pendingHeroImage = "";
   els.heroImageInput.value = "";
-  applyHeroPreview(loadHeroSettings());
+  const settings = loadHeroSettings();
+  savePersistentValue("hero-settings", settings);
+  applyHeroPreview(settings);
 });
 [
   els.navXInput,
@@ -611,7 +674,9 @@ els.resetContactSettings.addEventListener("click", () => restoreSitePart("contac
 els.resetWorksSettings.addEventListener("click", () => restoreSitePart("works"));
 els.resetSiteSettings.addEventListener("click", () => {
   localStorage.removeItem(siteSettingsKey);
-  populateSiteSettings(loadSiteSettings());
+  const settings = loadSiteSettings();
+  savePersistentValue("site-settings", settings);
+  populateSiteSettings(settings);
 });
 
 setAuthenticated(currentUser());

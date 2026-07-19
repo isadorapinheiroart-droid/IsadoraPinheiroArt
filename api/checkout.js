@@ -1,4 +1,5 @@
 const MERCADO_PAGO_PREFERENCES_URL = "https://api.mercadopago.com/checkout/preferences";
+const { database, ensureStateTable } = require("./db");
 
 function setCorsHeaders(req, res) {
   const allowedOrigin = process.env.ALLOWED_ORIGIN || "*";
@@ -38,6 +39,48 @@ function getRequestBody(req) {
   return req.body;
 }
 
+async function loadProductsForCheckout() {
+  if (!process.env.DATABASE_URL) return null;
+
+  await ensureStateTable();
+  const db = database();
+  const rows = await db`
+    select value
+    from atelier_state
+    where key = 'products'
+    limit 1
+  `;
+
+  return Array.isArray(rows[0]?.value) ? rows[0].value : [];
+}
+
+async function protectPricesWithDatabase(clientItems) {
+  const databaseProducts = await loadProductsForCheckout();
+  if (!databaseProducts) return clientItems;
+
+  const byId = new Map(databaseProducts.map((product) => [String(product.id), product]));
+  return clientItems.map((item) => {
+    const product = byId.get(String(item.id));
+    const quantity = Number.parseInt(item.quantity, 10) || 1;
+
+    const unitPrice = Number(product.price || 0);
+
+    if (!product || Number(product.stock) <= 0 || !Number.isFinite(unitPrice) || unitPrice <= 0) {
+      const error = new Error("Uma das obras do carrinho nao esta disponivel.");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    return {
+      id: String(product.id).slice(0, 64),
+      title: String(product.title || "Obra").slice(0, 120),
+      quantity: Math.max(1, Math.min(quantity, 10)),
+      unit_price: Number(unitPrice.toFixed(2)),
+      currency_id: "BRL",
+    };
+  });
+}
+
 module.exports = async function handler(req, res) {
   setCorsHeaders(req, res);
 
@@ -58,12 +101,19 @@ module.exports = async function handler(req, res) {
   }
 
   const body = getRequestBody(req);
-  const items = Array.isArray(body.items)
+  let items = Array.isArray(body.items)
     ? body.items.map(normalizeItem).filter(Boolean)
     : [];
 
   if (!items.length) {
     res.status(400).json({ error: "Carrinho vazio ou invalido." });
+    return;
+  }
+
+  try {
+    items = await protectPricesWithDatabase(items);
+  } catch (error) {
+    res.status(error.statusCode || 500).json({ error: error.message });
     return;
   }
 
