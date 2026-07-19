@@ -46,6 +46,10 @@ async function ensureOrdersTable() {
       postal_code text not null,
       reference_point text,
       items jsonb not null,
+      shipping_price numeric(12, 2) not null default 0,
+      shipping_region text,
+      shipping_min_days integer,
+      shipping_max_days integer,
       total numeric(12, 2) not null,
       mp_preference_id text,
       mp_payment_id text,
@@ -58,6 +62,10 @@ async function ensureOrdersTable() {
       paid_at timestamptz
     )
   `;
+  await db`alter table atelier_orders add column if not exists shipping_price numeric(12, 2) not null default 0`;
+  await db`alter table atelier_orders add column if not exists shipping_region text`;
+  await db`alter table atelier_orders add column if not exists shipping_min_days integer`;
+  await db`alter table atelier_orders add column if not exists shipping_max_days integer`;
   await db`create index if not exists atelier_orders_created_at_idx on atelier_orders (created_at desc)`;
   await db`create index if not exists atelier_orders_payment_id_idx on atelier_orders (mp_payment_id)`;
 }

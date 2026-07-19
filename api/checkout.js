@@ -1,6 +1,7 @@
 const MERCADO_PAGO_PREFERENCES_URL = "https://api.mercadopago.com/checkout/preferences";
 const crypto = require("crypto");
 const { database, ensureOrdersTable, ensureStateTable } = require("./db");
+const { calculateShipping } = require("./shipping-service");
 
 function setCorsHeaders(req, res) {
   const allowedOrigin = process.env.ALLOWED_ORIGIN || "*";
@@ -156,12 +157,33 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  const subtotal = items.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
+  let shipping;
+  try {
+    shipping = await calculateShipping({
+      postalCode: delivery.postalCode,
+      itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
+      subtotal,
+    });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({ error: error.message });
+    return;
+  }
+  if (shipping.configured) {
+    const displayedShippingPrice = Number(body.shippingPrice);
+    if (!Number.isFinite(displayedShippingPrice) || Math.abs(displayedShippingPrice - Number(shipping.price)) >= 0.01) {
+      res.status(409).json({ error: "O valor do frete foi atualizado. Calcule o frete novamente antes de pagar." });
+      return;
+    }
+  }
+
   const requestOrigin = req.headers.origin;
   const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "";
   const siteBaseUrl = (process.env.SITE_BASE_URL || requestOrigin || vercelUrl || "https://isadora-pinheiro-art.vercel.app").replace(/\/$/, "");
   const orderId = crypto.randomUUID();
   const orderCode = createOrderCode();
-  const total = items.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
+  const shippingPrice = Number(shipping.price || 0);
+  const total = subtotal + shippingPrice;
   const nameParts = delivery.fullName.split(" ");
   let db;
 
@@ -171,11 +193,13 @@ module.exports = async function handler(req, res) {
     await db`
       insert into atelier_orders (
         id, order_code, status, customer_name, delivery_address,
-        address_number, postal_code, reference_point, items, total
+        address_number, postal_code, reference_point, items,
+        shipping_price, shipping_region, shipping_min_days, shipping_max_days, total
       ) values (
         ${orderId}, ${orderCode}, 'creating_payment', ${delivery.fullName}, ${delivery.address},
         ${delivery.number}, ${delivery.postalCode}, ${delivery.referencePoint || null},
-        ${db.json(items)}, ${total.toFixed(2)}
+        ${db.json(items)}, ${shippingPrice.toFixed(2)}, ${shipping.regionName || null},
+        ${shipping.minDays || null}, ${shipping.maxDays || null}, ${total.toFixed(2)}
       )
     `;
   } catch (error) {
@@ -188,8 +212,17 @@ module.exports = async function handler(req, res) {
 
   const payerName = nameParts.shift();
   const payerSurname = nameParts.join(" ");
+  const paymentItems = shippingPrice > 0
+    ? [...items, {
+      id: "shipping",
+      title: `Frete para o CEP ${delivery.postalCode}`,
+      quantity: 1,
+      unit_price: shippingPrice,
+      currency_id: "BRL",
+    }]
+    : items;
   const preference = {
-    items,
+    items: paymentItems,
     payer: {
       name: payerName,
       ...(payerSurname ? { surname: payerSurname } : {}),
@@ -204,6 +237,7 @@ module.exports = async function handler(req, res) {
     metadata: {
       order_id: orderId,
       order_code: orderCode,
+      shipping_price: shippingPrice,
     },
     auto_return: "approved",
     statement_descriptor: "ISADORAART",
@@ -244,6 +278,7 @@ module.exports = async function handler(req, res) {
       id: data.id,
       order_id: orderId,
       order_code: orderCode,
+      shipping,
       init_point: data.init_point,
       sandbox_init_point: data.sandbox_init_point,
     });

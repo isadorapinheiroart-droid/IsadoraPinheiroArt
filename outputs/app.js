@@ -7,6 +7,7 @@ const siteSettingsKey = "atelier-site-settings-v1";
 const adminPassword = "atelier2026";
 const publicConfig = window.ATELIER_CONFIG || {};
 const stateEndpoint = publicConfig.stateEndpoint || "/api/state";
+const shippingEndpoint = publicConfig.shippingEndpoint || "/api/shipping";
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
 const els = {
@@ -40,7 +41,10 @@ const els = {
   cartDrawer: document.querySelector("#cartDrawer"),
   closeCart: document.querySelector("#closeCart"),
   cartItems: document.querySelector("#cartItems"),
+  cartSubtotal: document.querySelector("#cartSubtotal"),
   cartTotal: document.querySelector("#cartTotal"),
+  shippingTotalRow: document.querySelector("#shippingTotalRow"),
+  shippingTotal: document.querySelector("#shippingTotal"),
   checkoutButton: document.querySelector("#checkoutButton"),
   checkoutNote: document.querySelector("#checkoutNote"),
   deliveryForm: document.querySelector("#deliveryForm"),
@@ -49,6 +53,8 @@ const els = {
   deliveryNumber: document.querySelector("#deliveryNumber"),
   deliveryPostalCode: document.querySelector("#deliveryPostalCode"),
   deliveryReferencePoint: document.querySelector("#deliveryReferencePoint"),
+  calculateShipping: document.querySelector("#calculateShipping"),
+  shippingResult: document.querySelector("#shippingResult"),
   checkoutEndpointInput: document.querySelector("#checkoutEndpointInput"),
   saveCheckoutEndpoint: document.querySelector("#saveCheckoutEndpoint"),
   navHomeLink: document.querySelector("#navHomeLink"),
@@ -85,6 +91,7 @@ const fields = {
 
 let products = loadProducts();
 let cart = loadCart();
+let shippingQuote = null;
 
 const defaultSiteSettings = {
   nav: {
@@ -510,6 +517,7 @@ function addToCart(id) {
   const product = products.find((item) => item.id === id);
   if (!product || Number(product.stock) === 0) return;
   if (!cart.includes(id)) cart.push(id);
+  resetShippingQuote();
   saveCart();
   renderCart();
   els.cartDrawer.showModal();
@@ -517,8 +525,31 @@ function addToCart(id) {
 
 function removeFromCart(id) {
   cart = cart.filter((itemId) => itemId !== id);
+  resetShippingQuote();
   saveCart();
   renderCart();
+}
+
+function shippingSignature(items = cartProducts()) {
+  return items.map((product) => String(product.id)).sort().join("|");
+}
+
+function shippingQuoteMatches(items = cartProducts()) {
+  const postalCode = els.deliveryPostalCode.value.replace(/\D/g, "");
+  return Boolean(
+    shippingQuote
+    && shippingQuote.postalCode === postalCode
+    && shippingQuote.signature === shippingSignature(items),
+  );
+}
+
+function resetShippingQuote() {
+  shippingQuote = null;
+  if (els.shippingTotalRow) els.shippingTotalRow.hidden = true;
+  if (els.shippingResult) {
+    els.shippingResult.textContent = "";
+    els.shippingResult.className = "";
+  }
 }
 
 function renderCart() {
@@ -535,13 +566,84 @@ function renderCart() {
       <button type="button" data-remove-cart="${product.id}">Remover</button>
     </div>
   `).join("") : `<p class="meta">Seu carrinho está vazio.</p>`;
-  const total = items.reduce((sum, product) => sum + Number(product.price), 0);
-  els.cartTotal.textContent = money.format(total);
+  const subtotal = items.reduce((sum, product) => sum + Number(product.price), 0);
+  if (shippingQuote && !shippingQuoteMatches(items)) resetShippingQuote();
+  const shippingPrice = shippingQuoteMatches(items) ? Number(shippingQuote.price || 0) : 0;
+  els.cartSubtotal.textContent = money.format(subtotal);
+  els.shippingTotalRow.hidden = !shippingQuoteMatches(items);
+  els.shippingTotal.textContent = shippingPrice === 0 ? "Grátis" : money.format(shippingPrice);
+  els.cartTotal.textContent = money.format(subtotal + shippingPrice);
   els.checkoutButton.disabled = items.length === 0;
   els.checkoutNote.textContent = "";
   els.cartItems.querySelectorAll("[data-remove-cart]").forEach((button) => {
     button.addEventListener("click", () => removeFromCart(button.dataset.removeCart));
   });
+}
+
+async function calculateCartShipping() {
+  const items = cartProducts();
+  const postalCode = els.deliveryPostalCode.value.replace(/\D/g, "");
+  if (!items.length) {
+    els.shippingResult.textContent = "Adicione uma obra ao carrinho primeiro.";
+    els.shippingResult.className = "error";
+    return null;
+  }
+  if (postalCode.length !== 8) {
+    els.shippingResult.textContent = "Informe um CEP com 8 números.";
+    els.shippingResult.className = "error";
+    return null;
+  }
+
+  els.calculateShipping.disabled = true;
+  els.shippingResult.textContent = "Consultando o CEP...";
+  els.shippingResult.className = "";
+  try {
+    const response = await fetch(shippingEndpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        postalCode,
+        items: items.map((product) => ({ id: product.id, quantity: 1 })),
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Não foi possível calcular o frete.");
+    if (!data.configured) {
+      resetShippingQuote();
+      els.shippingResult.textContent = "A tabela de frete ainda não foi ativada pela artista.";
+      return data;
+    }
+
+    shippingQuote = {
+      ...data,
+      postalCode,
+      signature: shippingSignature(items),
+    };
+    const days = data.minDays === data.maxDays
+      ? `${data.minDays} dias úteis`
+      : `${data.minDays} a ${data.maxDays} dias úteis`;
+    const price = Number(data.price) === 0 ? "frete grátis" : money.format(Number(data.price));
+    els.shippingResult.textContent = `${data.destination.city}/${data.destination.state}: ${price}, prazo estimado de ${days}.`;
+    els.shippingResult.className = "success";
+
+    if (!els.deliveryAddress.value.trim()) {
+      els.deliveryAddress.value = [
+        data.destination.street,
+        data.destination.neighborhood,
+        `${data.destination.city} - ${data.destination.state}`,
+      ].filter(Boolean).join(", ");
+    }
+    renderCart();
+    return data;
+  } catch (error) {
+    resetShippingQuote();
+    els.shippingResult.textContent = error.message;
+    els.shippingResult.className = "error";
+    renderCart();
+    return null;
+  } finally {
+    els.calculateShipping.disabled = false;
+  }
 }
 
 function checkoutEndpoint() {
@@ -551,6 +653,14 @@ function checkoutEndpoint() {
 async function startCheckout() {
   const items = cartProducts();
   if (!items.length) return;
+  if (!shippingQuoteMatches(items)) {
+    const quote = await calculateCartShipping();
+    if (!quote) return;
+    if (quote.configured) {
+      els.checkoutNote.textContent = "Frete calculado. Confira o total e clique novamente para ir ao pagamento.";
+      return;
+    }
+  }
   const endpoint = checkoutEndpoint();
   if (!endpoint) {
     els.checkoutNote.textContent = "Checkout Mercado Pago preparado. Falta configurar um endpoint seguro no painel reservado para criar a preferência de pagamento.";
@@ -564,6 +674,7 @@ async function startCheckout() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        shippingPrice: shippingQuoteMatches(items) ? Number(shippingQuote.price || 0) : null,
         delivery: {
           fullName: els.deliveryFullName.value.trim(),
           address: els.deliveryAddress.value.trim(),
@@ -582,7 +693,14 @@ async function startCheckout() {
     });
     const data = await response.json();
     const checkoutUrl = data.init_point || data.sandbox_init_point || data.url;
-    if (!response.ok || !checkoutUrl) throw new Error(data.error || "Resposta de checkout inválida.");
+    if (!response.ok) {
+      if (response.status === 409) {
+        resetShippingQuote();
+        renderCart();
+      }
+      throw new Error(data.error || "Resposta de checkout inválida.");
+    }
+    if (!checkoutUrl) throw new Error("Resposta de checkout inválida.");
     sessionStorage.setItem("atelier-pending-order", JSON.stringify({
       id: data.order_id,
       code: data.order_code,
@@ -723,7 +841,6 @@ function openProduct(id) {
   els.modalBody.querySelectorAll("[data-buy-now]").forEach((button) => {
     button.addEventListener("click", () => {
       addToCart(button.dataset.buyNow);
-      startCheckout();
     });
   });
   els.modalBody.querySelectorAll("[data-open-similar]").forEach((button) => {
@@ -772,9 +889,12 @@ els.deliveryForm.addEventListener("submit", (event) => {
   event.preventDefault();
   startCheckout();
 });
+els.calculateShipping.addEventListener("click", calculateCartShipping);
 els.deliveryPostalCode.addEventListener("input", () => {
+  resetShippingQuote();
   const digits = els.deliveryPostalCode.value.replace(/\D/g, "").slice(0, 8);
   els.deliveryPostalCode.value = digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
+  renderCart();
 });
 els.saveCheckoutEndpoint.addEventListener("click", () => {
   localStorage.setItem(checkoutEndpointKey, els.checkoutEndpointInput.value.trim());

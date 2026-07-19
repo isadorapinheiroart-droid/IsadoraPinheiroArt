@@ -19,3 +19,9 @@ O site usa `/api/checkout` para criar a preferencia de pagamento no Mercado Pago
 O painel administrativo usa `/api/state` para salvar obras e ajustes do site. Os pedidos e dados de entrega ficam na tabela `atelier_orders` e so podem ser consultados por uma sessao autenticada do painel.
 
 O endpoint `/api/mercado-pago-webhook` recebe as notificacoes do Mercado Pago e consulta o pagamento diretamente na API antes de marcar um pedido como pago.
+
+## Frete proprio
+
+Sem uma conta de transportadora, o painel permite configurar uma tabela propria para Norte, Nordeste, Centro-Oeste, Sudeste e Sul. O cliente consulta o CEP no carrinho, o endereco e validado pelo ViaCEP e o valor configurado e somado ao total no servidor antes da criacao do pagamento.
+
+A cobranca permanece desativada ate que o administrador preencha os valores e prazos em `Configuracoes > Frete por regiao`, marque a opcao de ativacao e salve.

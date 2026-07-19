@@ -546,6 +546,24 @@ textarea {
   font-size: 1.15rem;
 }
 
+.cart-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 12px;
+  color: var(--muted);
+  font-size: 0.96rem;
+}
+
+.cart-summary-row[hidden] {
+  display: none;
+}
+
+.cart-summary-row strong {
+  color: var(--ink);
+}
+
 .checkout-button {
   width: 100%;
 }
@@ -609,6 +627,36 @@ textarea {
   display: grid;
   grid-template-columns: 1fr 0.8fr;
   gap: 12px;
+}
+
+.shipping-calculator {
+  display: grid;
+  gap: 8px;
+  margin-top: -2px;
+}
+
+.shipping-calculator button {
+  width: 100%;
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 850;
+}
+
+.shipping-calculator p {
+  min-height: 20px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.shipping-calculator p.success {
+  color: var(--accent);
+}
+
+.shipping-calculator p.error {
+  color: var(--accent-2);
 }
 
 .close {

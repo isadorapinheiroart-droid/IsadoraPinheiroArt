@@ -69,6 +69,12 @@ Quando o Mercado Pago envia uma notificacao, o servidor consulta o pagamento usa
 
 Os dados de entrega sao privados. A API de pedidos exige o login de servidor configurado por `ADMIN_USER`, `ADMIN_PASSWORD` e `SESSION_SECRET`.
 
+## Frete sem transportadora integrada
+
+O painel possui uma tabela propria de frete por regiao brasileira. O cliente consulta o CEP, visualiza o valor e o prazo estimado e confirma o total antes do pagamento. No checkout, o servidor consulta novamente a tabela salva no banco e adiciona o frete como item da preferencia do Mercado Pago.
+
+Essa tabela e uma estimativa definida pela artista e nao uma cotacao oficial dos Correios. Ela permanece desativada ate ser configurada e ativada no painel administrativo.
+
 ## Nome publico no GitHub Pages
 
 Para tirar `romulocearamor77-ops` do endereco, nao basta renomear o repositorio. Esse trecho vem do nome da conta do GitHub.

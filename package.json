@@ -5,7 +5,7 @@
   "description": "Site de vendas Isadora Pinheiro Art com Checkout Pro Mercado Pago.",
   "scripts": {
     "start": "vercel dev",
-    "check": "node --check api/auth.js && node --check api/admin-login.js && node --check api/admin-logout.js && node --check api/admin-session.js && node --check api/checkout.js && node --check api/db.js && node --check api/mercado-pago-webhook.js && node --check api/orders.js && node --check api/state.js && node --check outputs/app.js && node --check outputs/admin/app.js && node --check outputs/config.js"
+    "check": "node --check api/auth.js && node --check api/admin-login.js && node --check api/admin-logout.js && node --check api/admin-session.js && node --check api/admin-shipping.js && node --check api/checkout.js && node --check api/db.js && node --check api/mercado-pago-webhook.js && node --check api/orders.js && node --check api/shipping-service.js && node --check api/shipping.js && node --check api/state.js && node --check outputs/app.js && node --check outputs/admin/app.js && node --check outputs/config.js"
   },
   "dependencies": {
     "postgres": "^3.4.7"

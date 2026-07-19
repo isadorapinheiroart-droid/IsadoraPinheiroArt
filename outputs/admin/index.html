@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Admin | Isadora Pinheiro Pinturas Originais</title>
-    <link rel="stylesheet" href="/outputs/admin/styles.css?v=7" />
+    <link rel="stylesheet" href="/outputs/admin/styles.css?v=8" />
   </head>
   <body>
     <main>
@@ -330,6 +330,65 @@
             </div>
 
             <div class="panel settings">
+              <h3>Frete por região</h3>
+              <p>Configure uma estimativa própria de valor e prazo por região. A cobrança só será ativada depois que você marcar a opção abaixo e salvar.</p>
+              <label class="shipping-toggle">
+                <input id="shippingEnabledInput" type="checkbox" />
+                Ativar cálculo e cobrança de frete no site
+              </label>
+              <div class="shipping-rates">
+                <div class="shipping-rate shipping-rate-head" aria-hidden="true">
+                  <strong>Região</strong>
+                  <span>Valor</span>
+                  <span>Prazo mínimo</span>
+                  <span>Prazo máximo</span>
+                </div>
+                <div class="shipping-rate">
+                  <strong>Norte</strong>
+                  <label>Valor<input id="shippingNorthPrice" type="number" min="0" step="0.01" /></label>
+                  <label>Dias mínimos<input id="shippingNorthMin" type="number" min="1" max="90" /></label>
+                  <label>Dias máximos<input id="shippingNorthMax" type="number" min="1" max="90" /></label>
+                </div>
+                <div class="shipping-rate">
+                  <strong>Nordeste</strong>
+                  <label>Valor<input id="shippingNortheastPrice" type="number" min="0" step="0.01" /></label>
+                  <label>Dias mínimos<input id="shippingNortheastMin" type="number" min="1" max="90" /></label>
+                  <label>Dias máximos<input id="shippingNortheastMax" type="number" min="1" max="90" /></label>
+                </div>
+                <div class="shipping-rate">
+                  <strong>Centro-Oeste</strong>
+                  <label>Valor<input id="shippingCenterWestPrice" type="number" min="0" step="0.01" /></label>
+                  <label>Dias mínimos<input id="shippingCenterWestMin" type="number" min="1" max="90" /></label>
+                  <label>Dias máximos<input id="shippingCenterWestMax" type="number" min="1" max="90" /></label>
+                </div>
+                <div class="shipping-rate">
+                  <strong>Sudeste</strong>
+                  <label>Valor<input id="shippingSoutheastPrice" type="number" min="0" step="0.01" /></label>
+                  <label>Dias mínimos<input id="shippingSoutheastMin" type="number" min="1" max="90" /></label>
+                  <label>Dias máximos<input id="shippingSoutheastMax" type="number" min="1" max="90" /></label>
+                </div>
+                <div class="shipping-rate">
+                  <strong>Sul</strong>
+                  <label>Valor<input id="shippingSouthPrice" type="number" min="0" step="0.01" /></label>
+                  <label>Dias mínimos<input id="shippingSouthMin" type="number" min="1" max="90" /></label>
+                  <label>Dias máximos<input id="shippingSouthMax" type="number" min="1" max="90" /></label>
+                </div>
+              </div>
+              <div class="split shipping-extras">
+                <label>
+                  Acréscimo por quadro adicional
+                  <input id="shippingAdditionalItemFee" type="number" min="0" step="0.01" />
+                </label>
+                <label>
+                  Frete grátis acima de (0 desativa)
+                  <input id="shippingFreeThreshold" type="number" min="0" step="0.01" />
+                </label>
+              </div>
+              <p class="sync-status" id="shippingSettingsStatus"></p>
+              <button class="primary" id="saveShippingSettings" type="button">Salvar configuração de frete</button>
+            </div>
+
+            <div class="panel settings">
               <h3>Mercado Pago</h3>
               <p>O checkout salva o pedido e usa o webhook <strong>/api/mercado-pago-webhook</strong> para atualizar o pagamento automaticamente. O endpoint padrão abaixo já está pronto para a Vercel.</p>
               <label>
@@ -344,6 +403,6 @@
     </main>
 
     <script src="/outputs/config.js?v=1"></script>
-    <script src="/outputs/admin/app.js?v=7"></script>
+    <script src="/outputs/admin/app.js?v=8"></script>
   </body>
 </html>

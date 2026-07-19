@@ -16,6 +16,7 @@ module.exports = async function handler(req, res) {
       select
         id, order_code, status, customer_name, delivery_address,
         address_number, postal_code, reference_point, items, total,
+        shipping_price, shipping_region, shipping_min_days, shipping_max_days,
         mp_preference_id, mp_payment_id, mp_status, mp_status_detail,
         payer_email, created_at, updated_at, paid_at
       from atelier_orders

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Isadora Pinheiro Pinturas Originais | Galeria de Quadros</title>
-    <link rel="stylesheet" href="/outputs/styles.css?v=12" />
+    <link rel="stylesheet" href="/outputs/styles.css?v=13" />
   </head>
   <body>
     <header class="topbar">
@@ -251,6 +251,14 @@
           <button class="close" id="closeCart" aria-label="Fechar" type="button">x</button>
         </div>
         <div id="cartItems"></div>
+        <div class="cart-summary-row">
+          <span>Subtotal</span>
+          <strong id="cartSubtotal">R$ 0,00</strong>
+        </div>
+        <div class="cart-summary-row shipping-total" id="shippingTotalRow" hidden>
+          <span>Frete</span>
+          <strong id="shippingTotal">R$ 0,00</strong>
+        </div>
         <div class="cart-total">
           <span>Total</span>
           <strong id="cartTotal">R$ 0,00</strong>
@@ -279,6 +287,10 @@
               <input id="deliveryPostalCode" name="postalCode" autocomplete="postal-code" inputmode="numeric" maxlength="9" placeholder="00000-000" pattern="\d{5}-?\d{3}" required />
             </label>
           </div>
+          <div class="shipping-calculator">
+            <button id="calculateShipping" type="button">Calcular frete pelo CEP</button>
+            <p id="shippingResult" aria-live="polite"></p>
+          </div>
           <label>
             Ponto de referência <span>(opcional)</span>
             <input id="deliveryReferencePoint" name="referencePoint" maxlength="160" />
@@ -294,7 +306,7 @@
       <div class="modal-body" id="modalBody"></div>
     </dialog>
 
-    <script src="/outputs/config.js?v=1"></script>
-    <script src="/outputs/app.js?v=11"></script>
+    <script src="/outputs/config.js?v=2"></script>
+    <script src="/outputs/app.js?v=12"></script>
   </body>
 </html>

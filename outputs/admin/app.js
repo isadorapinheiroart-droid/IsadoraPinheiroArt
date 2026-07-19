@@ -69,6 +69,11 @@ const els = {
   resetContactSettings: document.querySelector("#resetContactSettings"),
   resetWorksSettings: document.querySelector("#resetWorksSettings"),
   resetSiteSettings: document.querySelector("#resetSiteSettings"),
+  shippingEnabledInput: document.querySelector("#shippingEnabledInput"),
+  shippingAdditionalItemFee: document.querySelector("#shippingAdditionalItemFee"),
+  shippingFreeThreshold: document.querySelector("#shippingFreeThreshold"),
+  shippingSettingsStatus: document.querySelector("#shippingSettingsStatus"),
+  saveShippingSettings: document.querySelector("#saveShippingSettings"),
 };
 
 const productFields = {
@@ -93,6 +98,34 @@ const userFields = {
   login: document.querySelector("#userLoginInput"),
   password: document.querySelector("#userPasswordInput"),
   role: document.querySelector("#userRoleInput"),
+};
+
+const shippingRateFields = {
+  north: {
+    price: document.querySelector("#shippingNorthPrice"),
+    minDays: document.querySelector("#shippingNorthMin"),
+    maxDays: document.querySelector("#shippingNorthMax"),
+  },
+  northeast: {
+    price: document.querySelector("#shippingNortheastPrice"),
+    minDays: document.querySelector("#shippingNortheastMin"),
+    maxDays: document.querySelector("#shippingNortheastMax"),
+  },
+  centerWest: {
+    price: document.querySelector("#shippingCenterWestPrice"),
+    minDays: document.querySelector("#shippingCenterWestMin"),
+    maxDays: document.querySelector("#shippingCenterWestMax"),
+  },
+  southeast: {
+    price: document.querySelector("#shippingSoutheastPrice"),
+    minDays: document.querySelector("#shippingSoutheastMin"),
+    maxDays: document.querySelector("#shippingSoutheastMax"),
+  },
+  south: {
+    price: document.querySelector("#shippingSouthPrice"),
+    minDays: document.querySelector("#shippingSouthMin"),
+    maxDays: document.querySelector("#shippingSouthMax"),
+  },
 };
 
 let products = loadProducts();
@@ -279,6 +312,76 @@ async function syncSettingsFromDatabase() {
   }
 }
 
+function fillShippingSettings(settings) {
+  els.shippingEnabledInput.checked = Boolean(settings.enabled);
+  els.shippingAdditionalItemFee.value = Number(settings.additionalItemFee || 0).toFixed(2);
+  els.shippingFreeThreshold.value = Number(settings.freeShippingThreshold || 0).toFixed(2);
+  Object.entries(shippingRateFields).forEach(([region, fields]) => {
+    const rate = settings.rates?.[region] || {};
+    fields.price.value = Number(rate.price || 0).toFixed(2);
+    fields.minDays.value = Number(rate.minDays || 1);
+    fields.maxDays.value = Number(rate.maxDays || rate.minDays || 1);
+  });
+}
+
+function readShippingSettings() {
+  const rates = {};
+  Object.entries(shippingRateFields).forEach(([region, fields]) => {
+    rates[region] = {
+      price: Number(fields.price.value || 0),
+      minDays: Number(fields.minDays.value || 1),
+      maxDays: Number(fields.maxDays.value || fields.minDays.value || 1),
+    };
+  });
+  return {
+    enabled: els.shippingEnabledInput.checked,
+    additionalItemFee: Number(els.shippingAdditionalItemFee.value || 0),
+    freeShippingThreshold: Number(els.shippingFreeThreshold.value || 0),
+    rates,
+  };
+}
+
+async function loadShippingSettingsForm() {
+  try {
+    const response = await fetch("/api/admin-shipping", {
+      headers: { Accept: "application/json" },
+      credentials: "same-origin",
+    });
+    if (!response.ok) throw new Error("Não foi possível carregar o frete.");
+    const data = await response.json();
+    fillShippingSettings(data.settings || {});
+  } catch (error) {
+    els.shippingSettingsStatus.textContent = error.message;
+    els.shippingSettingsStatus.className = "sync-status error";
+  }
+}
+
+async function saveShippingSettingsForm() {
+  els.saveShippingSettings.disabled = true;
+  els.shippingSettingsStatus.textContent = "Salvando configuração...";
+  els.shippingSettingsStatus.className = "sync-status";
+  try {
+    const response = await fetch("/api/admin-shipping", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ settings: readShippingSettings() }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Não foi possível salvar o frete.");
+    fillShippingSettings(data.settings);
+    els.shippingSettingsStatus.textContent = data.settings.enabled
+      ? "Frete ativado e pronto para consulta no site."
+      : "Configuração salva. O frete continua desativado no site.";
+    els.shippingSettingsStatus.className = "sync-status success";
+  } catch (error) {
+    els.shippingSettingsStatus.textContent = error.message;
+    els.shippingSettingsStatus.className = "sync-status error";
+  } finally {
+    els.saveShippingSettings.disabled = false;
+  }
+}
+
 function applyHeroPreview(settings = loadHeroSettings()) {
   const image = pendingHeroImage || settings.image;
   if (image) document.documentElement.style.setProperty("--admin-hero-image", `url("${image}")`);
@@ -388,6 +491,7 @@ function setAuthenticated(user) {
     renderAll();
     syncProductsFromDatabase();
     syncSettingsFromDatabase();
+    loadShippingSettingsForm();
     loadOrders();
   } else {
     localStorage.removeItem(sessionKey);
@@ -687,6 +791,12 @@ function renderOrders(orders) {
     const payerEmail = order.payer_email
       ? `<p><strong>E-mail Mercado Pago:</strong> ${escapeHtml(order.payer_email)}</p>`
       : "";
+    const shippingPrice = Number(order.shipping_price || 0);
+    const shippingDeadline = order.shipping_min_days
+      ? order.shipping_min_days === order.shipping_max_days
+        ? `${order.shipping_min_days} dias úteis`
+        : `${order.shipping_min_days} a ${order.shipping_max_days} dias úteis`
+      : "Não informado";
 
     return `
       <article class="order-card">
@@ -718,6 +828,9 @@ function renderOrders(orders) {
           </section>
           <section>
             <h5>Pagamento</h5>
+            <p><strong>Obras:</strong> ${escapeHtml(money.format(Math.max(0, Number(order.total) - shippingPrice)))}</p>
+            <p><strong>Frete:</strong> ${order.shipping_region ? shippingPrice === 0 ? "Grátis" : escapeHtml(money.format(shippingPrice)) : "Não configurado"}</p>
+            ${order.shipping_region ? `<p><strong>Entrega:</strong> ${escapeHtml(order.shipping_region)} · ${escapeHtml(shippingDeadline)}</p>` : ""}
             <p><strong>Total:</strong> ${escapeHtml(money.format(Number(order.total) || 0))}</p>
             <p><strong>Status:</strong> ${escapeHtml(orderStatusLabel(order.status))}</p>
             ${paymentId}
@@ -885,6 +998,7 @@ els.resetSiteSettings.addEventListener("click", () => {
   savePersistentValue("site-settings", settings);
   populateSiteSettings(settings);
 });
+els.saveShippingSettings.addEventListener("click", saveShippingSettingsForm);
 
 restoreAdminSession();
 

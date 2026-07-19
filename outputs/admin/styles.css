@@ -476,6 +476,65 @@ body.locked {
   margin: 0 0 12px;
 }
 
+.shipping-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--soft);
+  color: var(--ink);
+}
+
+.shipping-toggle input {
+  width: 20px;
+  min-height: 20px;
+  margin: 0;
+}
+
+.shipping-rates {
+  display: grid;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.shipping-rate {
+  display: grid;
+  grid-template-columns: 1.2fr repeat(3, 1fr);
+  gap: 10px;
+  align-items: end;
+  padding: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.shipping-rate:first-child {
+  border-top: 0;
+}
+
+.shipping-rate-head {
+  align-items: center;
+  background: var(--soft);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.shipping-rate label {
+  font-size: 0.76rem;
+}
+
+.shipping-rate input {
+  min-height: 40px;
+  padding: 8px;
+}
+
+.shipping-extras {
+  margin-top: 18px;
+}
+
 .content-editor {
   margin-top: 18px;
   padding-top: 18px;
@@ -623,6 +682,15 @@ body.locked {
   .panel-head {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .shipping-rate,
+  .shipping-rate-head {
+    grid-template-columns: 1fr;
+  }
+
+  .shipping-rate-head span {
+    display: none;
   }
 }
 
