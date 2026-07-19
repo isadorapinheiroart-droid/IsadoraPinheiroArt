@@ -1941,3 +1941,32 @@ textarea {
     align-self: flex-start;
   }
 }
+
+/* Preserve the complete artwork composition on phones. */
+@media (max-width: 760px) {
+  .hero {
+    width: 100%;
+    min-height: 0;
+    height: auto;
+    aspect-ratio: 1600 / 926;
+    background-size: contain;
+    background-position: center top;
+  }
+
+  .art-card img {
+    width: 100%;
+    height: auto;
+    max-height: 78svh;
+    aspect-ratio: auto;
+    object-fit: contain;
+    background: #f5f1eb;
+  }
+
+  .photo-viewer img,
+  .main-photo-wrap img {
+    width: 100%;
+    height: auto;
+    max-height: 58svh;
+    object-fit: contain;
+  }
+}
