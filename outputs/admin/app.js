@@ -24,6 +24,8 @@ const els = {
   productForm: document.querySelector("#productForm"),
   productList: document.querySelector("#productList"),
   productCount: document.querySelector("#productCount"),
+  syncDatabase: document.querySelector("#syncDatabase"),
+  databaseStatus: document.querySelector("#databaseStatus"),
   photoSequence: document.querySelector("#photoSequence"),
   similarInput: document.querySelector("#similarInput"),
   userForm: document.querySelector("#userForm"),
@@ -151,14 +153,40 @@ async function loadPersistentValue(key) {
 
 async function savePersistentValue(key, value) {
   try {
-    await fetch(`${stateEndpoint}?key=${encodeURIComponent(key)}`, {
+    const response = await fetch(`${stateEndpoint}?key=${encodeURIComponent(key)}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ value }),
     });
+    if (!response.ok) throw new Error("Falha ao salvar no banco.");
+    return true;
   } catch (error) {
     // O painel continua funcionando com localStorage se o banco ainda nao estiver conectado.
+    return false;
   }
+}
+
+function showDatabaseStatus(message, type = "") {
+  if (!els.databaseStatus) return;
+  els.databaseStatus.textContent = message;
+  els.databaseStatus.className = `sync-status ${type}`.trim();
+}
+
+async function syncLocalProductsToDatabase() {
+  if (!products.length) {
+    showDatabaseStatus("Nenhuma obra local para enviar ao banco.", "error");
+    return;
+  }
+
+  if (els.syncDatabase) els.syncDatabase.disabled = true;
+  showDatabaseStatus("Enviando obras para o banco...");
+
+  const ok = await savePersistentValue("products", products);
+  showDatabaseStatus(
+    ok ? "Obras enviadas ao banco. Agora outros aparelhos conseguem ver." : "Nao foi possivel enviar ao banco. Confira DATABASE_URL na Vercel.",
+    ok ? "success" : "error",
+  );
+  if (els.syncDatabase) els.syncDatabase.disabled = false;
 }
 
 async function syncProductsFromDatabase() {
@@ -170,7 +198,13 @@ async function syncProductsFromDatabase() {
     return;
   }
 
-  if (products.length) savePersistentValue("products", products);
+  if (products.length) {
+    const ok = await savePersistentValue("products", products);
+    showDatabaseStatus(
+      ok ? "Obras locais sincronizadas com o banco." : "Banco indisponivel. As obras ainda estao apenas neste navegador.",
+      ok ? "success" : "error",
+    );
+  }
 }
 
 function loadUsers() {
@@ -605,6 +639,7 @@ els.logoutButton.addEventListener("click", () => setAuthenticated(null));
 els.tabs.forEach((tab) => tab.addEventListener("click", () => switchView(tab.dataset.view)));
 els.productForm.addEventListener("submit", saveProduct);
 document.querySelector("#newProduct").addEventListener("click", clearProductForm);
+els.syncDatabase?.addEventListener("click", syncLocalProductsToDatabase);
 productFields.images.addEventListener("change", async () => {
   const uploaded = await Promise.all([...productFields.images.files].slice(0, 3).map(fileToDataUrl));
   renderPhotoSequence(uploaded);

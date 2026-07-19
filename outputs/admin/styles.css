@@ -310,6 +310,22 @@ body.locked {
   line-height: 1.45;
 }
 
+.sync-status {
+  min-height: 22px;
+  margin: 10px 0 14px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.sync-status.success {
+  color: var(--accent);
+}
+
+.sync-status.error {
+  color: var(--danger);
+}
+
 .row-actions {
   justify-content: flex-end;
 }

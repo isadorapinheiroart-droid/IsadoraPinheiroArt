@@ -122,9 +122,13 @@
 
               <div class="panel">
                 <div class="panel-head">
-                  <h3>Estoque</h3>
-                  <span id="productCount"></span>
+                  <div>
+                    <h3>Estoque</h3>
+                    <span id="productCount"></span>
+                  </div>
+                  <button id="syncDatabase" type="button">Enviar ao banco</button>
                 </div>
+                <p class="sync-status" id="databaseStatus"></p>
                 <div id="productList"></div>
               </div>
             </div>
